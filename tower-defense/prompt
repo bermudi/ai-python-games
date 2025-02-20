@@ -1,0 +1,36 @@
+Create a sophisticated tower defense game using Pygame and PIL for custom sprite generation. This project emphasizes advanced programming concepts, custom graphics generation, and game architecture design.
+
+## Core Requirements
+
+### 1. Dynamic Sprite Generation System (Advanced)
+- Implement a sprite factory using PIL that generates ALL game graphics programmatically
+- Required sprite categories:
+  - At least 4 tower types with distinct visual designs
+  - 5+ enemy types with procedurally generated variations
+  - Projectiles with particle effects
+  - Environmental elements (terrain features)
+  - UI elements
+- Each sprite must include animation frames
+- Implement a caching system for generated sprites to optimize performance
+
+### 2. Advanced Tower Mechanics
+- Minimum 4 tower types with unique behaviors:
+  - Primary attack mechanism
+  - Secondary ability
+  - Upgrade paths (minimum 3 levels each)
+  - Area of effect capabilities
+- Tower synergy system where towers buff nearby allies
+- Tower targeting priorities with at least 3 AI strategies
+- Heat map generation for tower placement efficiency
+
+### 3. Enemy System
+- Enemy wave generator using a genetic algorithm to create increasingly challenging waves
+- Enemy types must include:
+  - Basic units
+  - Flying units
+  - Armored units
+  - Healing/Support units
+  - Boss units with unique abilities
+- Enemy behavior patterns using state machines
+- Path-finding algorithm implementation (A* or similar)
+- Dynamic difficulty adjustment based on player performance
