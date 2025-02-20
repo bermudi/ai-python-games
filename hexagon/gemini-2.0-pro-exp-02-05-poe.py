@@ -28,7 +28,7 @@ ball_pos = [WIDTH // 2, HEIGHT // 2 - 100]  # Initial position (list for mutabil
 ball_velocity = [0, 0]  # Initial velocity
 GRAVITY = 0.2
 FRICTION = 0.99  # Air resistance (velocity reduction per frame)
-BOUNCE_DAMPING = 0.8  # Energy loss on collision
+BOUNCE_DAMPING = 1.0  # Energy loss on collision
 
 
 # --- 2. Helper Functions ---
