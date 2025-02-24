@@ -1,9 +1,6 @@
 import pygame
 import random
 
-# Prompt: can you write a game of Tetris in python?
-
-
 # Game Constants
 BLOCK_SIZE = 30
 GRID_WIDTH = 10
