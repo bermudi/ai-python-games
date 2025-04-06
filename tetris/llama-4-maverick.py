@@ -4,129 +4,148 @@ import random
 pygame.init()
 
 # Define some colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-GRAY = (128, 128, 128)
+BLACK    = (   0,   0,   0)
+WHITE    = ( 255, 255, 255)
+GRAY     = ( 128, 128, 128)
+RED      = ( 255,   0,   0)
+
+size = (400, 500)
+screen = pygame.display.set_mode(size)
+pygame.display.set_caption("Tetris")
+
+# Loop until the user clicks the close button.
+done = False
+clock = pygame.time.Clock()
 
 class Shape:
     def __init__(self):
         self.x = 5
         self.y = 0
-        self.color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
+        self.color = random.choice([(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255), (0, 255, 255)])
         self.blocks = random.choice([
-            [[0, 0], [1, 0], [0, 1], [1, 1]],  # O shape
-            [[-1, 0], [0, 0], [1, 0], [2, 0]],  # I shape
-            [[0, 0], [1, 0], [0, 1], [0, 2]],  # J shape
-            [[0, 0], [1, 0], [1, 1], [1, 2]],  # L shape
-            [[0, 0], [1, 0], [0, 1], [1, 1]],  # S shape
-            [[0, 0], [1, 0], [1, 1], [2, 1]],  # Z shape
-            [[0, 0], [1, 0], [2, 0], [1, 1]]   # T shape
+            [[1, 1, 1, 1]],  # I
+            [[1, 1], [1, 1]],  # O
+            [[0, 1, 0], [1, 1, 1]],  # T
+            [[1, 0, 0], [1, 1, 1]],  # J
+            [[0, 0, 1], [1, 1, 1]],  # L
+            [[1, 1, 0], [0, 1, 1]],  # S
+            [[0, 1, 1], [1, 1, 0]]   # Z
         ])
 
     def rotate(self):
-        new_blocks = [[-y, x] for x, y in self.blocks]
-        self.blocks = new_blocks
+        self.blocks = [list(reversed(x)) for x in zip(*self.blocks)]
 
-class Tetris:
+class Grid:
     def __init__(self, width=10, height=20):
         self.width = width
         self.height = height
-        self.grid = [[None for _ in range(width)] for _ in range(height)]
-        self.shape = Shape()
-        self.score = 0
-        self.speed = 1
-        self.screen = pygame.display.set_mode((300, 400))
-        pygame.display.set_caption("Tetris")
-        self.clock = pygame.time.Clock()
-
-    def run(self):
-        running = True
-        fall_time = 0
-        while running:
-            self.clock.tick(60)
-            fall_time += 1 / 60
-            if fall_time >= 1 / self.speed:
-                fall_time = 0
-                self.move_down()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_LEFT:
-                        self.move_side(-1)
-                    elif event.key == pygame.K_RIGHT:
-                        self.move_side(1)
-                    elif event.key == pygame.K_DOWN:
-                        self.move_down()
-                    elif event.key == pygame.K_UP:
-                        self.shape.rotate()
-                        if not self.is_valid_position():
-                            self.shape.rotate()
-                            self.shape.rotate()
-                            self.shape.rotate()
-            self.draw()
-        pygame.quit()
-
-    def is_valid_position(self):
-        for x, y in self.shape.blocks:
-            grid_x = x + self.shape.x
-            grid_y = y + self.shape.y
-            if grid_x < 0 or grid_x >= self.width or grid_y >= self.height:
-                return False
-            if grid_y >= 0 and self.grid[grid_y][grid_x] is not None:
-                return False
-        return True
-
-    def move_side(self, dx):
-        self.shape.x += dx
-        if not self.is_valid_position():
-            self.shape.x -= dx
-
-    def move_down(self):
-        self.shape.y += 1
-        if not self.is_valid_position():
-            self.shape.y -= 1
-            self.lock_shape()
-            self.check_for_lines()
-            self.shape = Shape()
-            if not self.is_valid_position():
-                print("Game Over")
-                pygame.quit()
-                quit()
-
-    def lock_shape(self):
-        for x, y in self.shape.blocks:
-            grid_x = x + self.shape.x
-            grid_y = y + self.shape.y
-            if grid_y >= 0:
-                self.grid[grid_y][grid_x] = self.shape.color
-
-    def check_for_lines(self):
-        lines_cleared = 0
-        for y, row in enumerate(self.grid):
-            if all(cell is not None for cell in row):
-                del self.grid[y]
-                self.grid.insert(0, [None for _ in range(self.width)])
-                lines_cleared += 1
-        self.score += lines_cleared * lines_cleared
+        self.cells = [[None for _ in range(width)] for _ in range(height)]
 
     def draw(self):
-        self.screen.fill(BLACK)
-        for y, row in enumerate(self.grid):
+        for y, row in enumerate(self.cells):
             for x, cell in enumerate(row):
-                if cell is not None:
-                    pygame.draw.rect(self.screen, cell, (x * 20 + 50, y * 20 + 50, 20, 20), 0)
-        for x, y in self.shape.blocks:
-            grid_x = x + self.shape.x
-            grid_y = y + self.shape.y
-            if grid_y >= 0:
-                pygame.draw.rect(self.screen, self.shape.color, (grid_x * 20 + 50, grid_y * 20 + 50, 20, 20), 0)
-        pygame.draw.rect(self.screen, WHITE, (50, 50, self.width * 20, self.height * 20), 1)
-        font = pygame.font.Font(None, 36)
-        text = font.render(f"Score: {self.score}", True, WHITE)
-        self.screen.blit(text, (10, 10))
-        pygame.display.flip()
+                if cell:
+                    pygame.draw.rect(screen, cell, [x * 20 + 100, y * 20 + 50, 20, 20], 0)
 
-if __name__ == "__main__":
-    game = Tetris()
-    game.run()
+    def is_collision(self, shape, offset_x, offset_y):
+        for y, row in enumerate(shape.blocks):
+            for x, val in enumerate(row):
+                if val:
+                    cell_x = x + offset_x
+                    cell_y = y + offset_y
+                    if cell_x < 0 or cell_x >= self.width or cell_y < 0 or cell_y >= self.height or self.cells[cell_y][cell_x]:
+                        return True
+        return False
+
+    def place_shape(self, shape, offset_x, offset_y):
+        for y, row in enumerate(shape.blocks):
+            for x, val in enumerate(row):
+                if val:
+                    cell_x = x + offset_x
+                    cell_y = y + offset_y
+                    self.cells[cell_y][cell_x] = shape.color
+
+    def check_and_clear_rows(self):
+        to_remove = []
+        for i, row in enumerate(self.cells):
+            if all(row):
+                to_remove.append(i)
+        if to_remove:
+            for i in sorted(to_remove, reverse=True):
+                del self.cells[i]
+                self.cells.insert(0, [None for _ in range(self.width)])
+        return len(to_remove)
+
+grid = Grid()
+current_shape = Shape()
+score = 0
+fall_time = 0
+fall_rate = 500  # lower is faster
+
+# -------- Main Program Loop -----------
+while not done:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            done = True
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                if not grid.is_collision(current_shape, current_shape.x - 1, current_shape.y):
+                    current_shape.x -= 1
+            elif event.key == pygame.K_RIGHT:
+                if not grid.is_collision(current_shape, current_shape.x + 1, current_shape.y):
+                    current_shape.x += 1
+            elif event.key == pygame.K_DOWN:
+                if not grid.is_collision(current_shape, current_shape.x, current_shape.y + 1):
+                    current_shape.y += 1
+            elif event.key == pygame.K_SPACE:
+                while not grid.is_collision(current_shape, current_shape.x, current_shape.y + 1):
+                    current_shape.y += 1
+            elif event.key == pygame.K_UP:
+                current_shape.rotate()
+                if grid.is_collision(current_shape, current_shape.x, current_shape.y):
+                    current_shape.rotate()
+                    current_shape.rotate()
+                    current_shape.rotate()  # revert
+
+    # --- Game logic should go here
+    fall_time += clock.get_time()
+    if fall_time >= fall_rate:
+        fall_time = 0
+        if not grid.is_collision(current_shape, current_shape.x, current_shape.y + 1):
+            current_shape.y += 1
+        else:
+            grid.place_shape(current_shape, current_shape.x, current_shape.y)
+            lines_cleared = grid.check_and_clear_rows()
+            if lines_cleared == 1:
+                score += 100
+            elif lines_cleared == 2:
+                score += 300
+            elif lines_cleared == 3:
+                score += 500
+            elif lines_cleared == 4:
+                score += 800
+            current_shape = Shape()
+
+    # --- Screen-clearing code goes here
+    screen.fill(WHITE)
+
+    # --- Drawing code should go here
+    grid.draw()
+    for y, row in enumerate(current_shape.blocks):
+        for x, val in enumerate(row):
+            if val:
+                pygame.draw.rect(screen, current_shape.color, [(current_shape.x + x) * 20 + 100, (current_shape.y + y) * 20 + 50, 20, 20], 0)
+
+    pygame.draw.rect(screen, GRAY, [100, 50, 200, 400], 1)  # grid outline
+    font = pygame.font.SysFont('arial', 24)
+    text = font.render(f'Score: {score}', True, BLACK)
+    screen.blit(text, [120, 20])
+
+    # --- Go ahead and update the screen with what we've drawn.
+    pygame.display.flip()
+
+    # --- Limit to 60 frames per second
+    clock.tick(60)
+
+# Close the window and quit.
+pygame.quit()
