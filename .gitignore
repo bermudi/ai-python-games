@@ -175,3 +175,4 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 tetris/tetris_high_score.txt
+.qodo

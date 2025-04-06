@@ -1,0 +1,2 @@
+Write a Python function that transforms a nested dictionary into a "flattened" one, where keys are dot-separated paths. For example, {"a": {"b": 1, "c": {"d": 2}}} becomes {"a.b": 1, "a.c.d": 2}. Include support for lists and handle edge cases
+
