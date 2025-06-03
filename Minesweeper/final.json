@@ -1,0 +1,568 @@
+{
+  "game": "BombSweeper",
+  "timestamp": "2025-04-25T05:40:12.123Z",
+  "difficulty": "Easy",
+  "bombs": 7,
+  "flagsPlaced": 7,
+  "timeElapsed": 573,
+  "gameStatus": "Won",
+  "grid": {
+    "rows": 9,
+    "columns": 9
+  },
+  "board": {
+    "A1": {
+      "revealed": false,
+      "flagged": true,
+      "display": "🚩"
+    },
+    "B1": {
+      "revealed": true,
+      "flagged": false,
+      "display": "2",
+      "isBomb": false,
+      "adjacentBombs": 2
+    },
+    "C1": {
+      "revealed": false,
+      "flagged": true,
+      "display": "🚩"
+    },
+    "D1": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "E1": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "F1": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "G1": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "H1": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "I1": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "A2": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "B2": {
+      "revealed": true,
+      "flagged": false,
+      "display": "2",
+      "isBomb": false,
+      "adjacentBombs": 2
+    },
+    "C2": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "D2": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "E2": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "F2": {
+      "revealed": true,
+      "flagged": false,
+      "display": "2",
+      "isBomb": false,
+      "adjacentBombs": 2
+    },
+    "G2": {
+      "revealed": false,
+      "flagged": true,
+      "display": "🚩"
+    },
+    "H2": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "I2": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "A3": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "B3": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "C3": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "D3": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "E3": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "F3": {
+      "revealed": false,
+      "flagged": true,
+      "display": "🚩"
+    },
+    "G3": {
+      "revealed": true,
+      "flagged": false,
+      "display": "2",
+      "isBomb": false,
+      "adjacentBombs": 2
+    },
+    "H3": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "I3": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "A4": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "B4": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "C4": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "D4": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "E4": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "F4": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "G4": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "H4": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "I4": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "A5": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "B5": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "C5": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "D5": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "E5": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "F5": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "G5": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "H5": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "I5": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "A6": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "B6": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "C6": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "D6": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "E6": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "F6": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "G6": {
+      "revealed": false,
+      "flagged": true,
+      "display": "🚩"
+    },
+    "H6": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "I6": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "A7": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "B7": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "C7": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "D7": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "E7": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "F7": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "G7": {
+      "revealed": true,
+      "flagged": false,
+      "display": "2",
+      "isBomb": false,
+      "adjacentBombs": 2
+    },
+    "H7": {
+      "revealed": true,
+      "flagged": false,
+      "display": "2",
+      "isBomb": false,
+      "adjacentBombs": 2
+    },
+    "I7": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "A8": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "B8": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "C8": {
+      "revealed": false,
+      "flagged": true,
+      "display": "🚩"
+    },
+    "D8": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "E8": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "F8": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "G8": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "H8": {
+      "revealed": false,
+      "flagged": true,
+      "display": "🚩"
+    },
+    "I8": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "A9": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "B9": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "C9": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "D9": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "E9": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "F9": {
+      "revealed": true,
+      "flagged": false,
+      "display": "",
+      "isBomb": false,
+      "adjacentBombs": 0
+    },
+    "G9": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "H9": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    },
+    "I9": {
+      "revealed": true,
+      "flagged": false,
+      "display": "1",
+      "isBomb": false,
+      "adjacentBombs": 1
+    }
+  }
+}
