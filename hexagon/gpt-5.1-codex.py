@@ -2,7 +2,7 @@ import math
 import sys
 from typing import List
 
-import pygame
+import pygame; pygame.Vector2 = pygame.math.Vector2
 
 WIDTH, HEIGHT = 800, 800
 CENTER = pygame.Vector2(WIDTH / 2, HEIGHT / 2)
