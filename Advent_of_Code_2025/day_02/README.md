@@ -37,8 +37,8 @@ All models successfully solved both parts of the challenge! Every AI model got b
 - First attempt: 2477159526 (incorrect)
 - Second attempt: 44854383294 (correct)
 
-## Files
+## File structure
 
 - `input.txt`: The input data for Day 02
 - `*_part2.py`: Solutions for Part 2 of the problem
-- `*.py`: Solutions for Part 1 of the problem (without _part2 suffix)
+- `*_part1.py`: Solutions for Part 1; every part-one script now carries an explicit `_part1` suffix to pair with its `_part2` counterpart for consistency
