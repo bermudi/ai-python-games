@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hacker News Reader</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        hn: {
+                            orange: '#ff6600',
+                            lightBg: '#f6f6ef',
+                            darkBg: '#0f172a',
+                            darkCard: '#1e293b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom scrollbar behavior */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        /* Collapsible tree animation */
+        .comment-branch {
+            position: relative;
+        }
+        .comment-branch::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 10px;
+            bottom: 0;
+            width: 2px;
+            background-color: rgb(226, 232, 240);
+        }
+        .dark .comment-branch::before {
+            background-color: rgb(51, 65, 85);
+        }
+    </style>
+</head>
+<body class="h-full bg-slate-50 dark:bg-hn-darkBg text-slate-800 dark:text-slate-100 transition-colors duration-200">
+
+    <div class="flex flex-col h-full overflow-hidden">
+        <!-- Top Navigation Header -->
+        <header class="bg-white dark:bg-hn-darkCard border-b border-slate-200 dark:border-slate-800 px-4 py-3 shrink-0 shadow-sm z-10">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                
+                <!-- Logo & Brand -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3 cursor-pointer" onclick="changeCategory('front_page')">
+                        <div class="bg-hn-orange text-white p-1.5 rounded-md flex items-center justify-center font-bold text-lg">
+                            Y
+                        </div>
+                        <h1 class="text-xl font-bold tracking-tight">HN <span class="text-slate-400 dark:text-slate-500 font-light">Reader</span></h1>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2 md:hidden">
+                        <button onclick="toggleTheme()" class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" title="Toggle Theme">
+                            <i data-lucide="sun" class="hidden dark:block w-5 h-5"></i>
+                            <i data-lucide="moon" class="block dark:hidden w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Feed Categories -->
+                <nav class="flex items-center space-x-1 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+                    <button id="tab-front_page" onclick="changeCategory('front_page')" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-hn-orange/10 text-hn-orange">Top</button>
+                    <button id="tab-new" onclick="changeCategory('new')" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">New</button>
+                    <button id="tab-ask" onclick="changeCategory('ask')" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Ask</button>
+                    <button id="tab-show" onclick="changeCategory('show')" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Show</button>
+                    <button id="tab-jobs" onclick="changeCategory('jobs')" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Jobs</button>
+                    <button id="tab-followed" onclick="changeCategory('followed')" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 flex items-center gap-1">
+                        <i data-lucide="bookmark" class="w-3.5 h-3.5"></i> Followed
+                    </button>
+                </nav>
+
+                <!-- Search & Filters -->
+                <div class="flex items-center space-x-3">
+                    <div class="relative flex-1 md:w-60">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                        <input id="searchInput" type="text" placeholder="Search stories..." 
+                               class="w-full bg-slate-100 dark:bg-slate-800 pl-9 pr-4 py-1.5 text-sm rounded-lg border border-transparent focus:border-hn-orange focus:bg-white dark:focus:bg-hn-darkCard focus:outline-none transition-all">
+                    </div>
+
+                    <button id="hideVisitedBtn" onclick="toggleHideVisited()" class="p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200" title="Toggle Hiding Visited Stories">
+                        <i data-lucide="eye" class="w-4 h-4"></i>
+                    </button>
+
+                    <button onclick="toggleTheme()" class="hidden md:flex p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200" title="Toggle Theme">
+                        <i data-lucide="sun" class="hidden dark:block w-4 h-4"></i>
+                        <i data-lucide="moon" class="block dark:hidden w-4 h-4"></i>
+                    </button>
+                </div>
+
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="flex-1 flex overflow-hidden max-w-7xl w-full mx-auto relative">
+            
+            <!-- Left Panel: Stories Feed -->
+            <section id="leftPanel" class="w-full md:w-5/12 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full bg-slate-50 dark:bg-slate-900 shrink-0">
+                
+                <!-- Feed Filter Summary/Indicators -->
+                <div class="px-4 py-2 bg-slate-100/60 dark:bg-slate-900/40 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
+                    <span id="storyCountText">Loading stories...</span>
+                    <button onclick="clearVisited()" class="hover:text-red-500 transition-colors flex items-center gap-1">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear Visited
+                    </button>
+                </div>
+
+                <!-- Feed Scrollable List -->
+                <div id="storiesContainer" class="flex-1 overflow-y-auto divide-y divide-slate-150 dark:divide-slate-800/80">
+                    <!-- Stories dynamically injected here -->
+                </div>
+
+                <!-- Load More Footer -->
+                <div class="p-3 border-t border-slate-200 dark:border-slate-800 text-center shrink-0">
+                    <button id="loadMoreBtn" onclick="loadMoreStories()" class="w-full py-2 px-4 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 font-semibold text-xs tracking-wider uppercase text-slate-600 dark:text-slate-300 transition-colors">
+                        Load More Stories
+                    </button>
+                </div>
+            </section>
+
+            <!-- Right Panel: Story & Nested Comments Detail View -->
+            <section id="rightPanel" class="hidden md:flex flex-col flex-1 h-full bg-white dark:bg-hn-darkBg absolute md:relative inset-0 z-20">
+                
+                <!-- Detail View Header (Mobile view navigation standard) -->
+                <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-hn-darkCard shrink-0">
+                    <button onclick="closeDetailView()" class="md:hidden flex items-center gap-1 px-3 py-1 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded text-sm font-medium">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i> Back
+                    </button>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Detailed View</span>
+                    <div id="storyActions" class="flex items-center gap-2">
+                        <!-- Action buttons dynamically inserted -->
+                    </div>
+                </div>
+
+                <!-- Active Details Content Container -->
+                <div id="detailsContent" class="flex-1 overflow-y-auto p-4 lg:p-6">
+                    <!-- Default State: No story selected -->
+                    <div id="emptyState" class="h-full flex flex-col items-center justify-center text-center p-8">
+                        <div class="p-4 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 mb-4">
+                            <i data-lucide="book-open" class="w-12 h-12"></i>
+                        </div>
+                        <h3 class="text-lg font-bold">No Story Selected</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm max-w-sm mt-1">Select an article from the feed to load detailed content and nested comment threads.</p>
+                    </div>
+
+                    <!-- Loader (Hidden by default) -->
+                    <div id="detailsLoader" class="hidden h-full flex items-center justify-center">
+                        <div class="animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-hn-orange"></div>
+                    </div>
+
+                    <!-- Story Info Panel -->
+                    <div id="storyContainer" class="hidden space-y-4">
+                        <div class="pb-4 border-b border-slate-100 dark:border-slate-800">
+                            <!-- Title & domain tag -->
+                            <h2 id="storyDetailTitle" class="text-xl md:text-2xl font-bold leading-snug"></h2>
+                            <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                                <span id="storyDetailAuthor" class="font-semibold text-slate-700 dark:text-slate-300"></span>
+                                <span id="storyDetailTime"></span>
+                                <span id="storyDetailScore" class="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-400"></span>
+                            </div>
+                        </div>
+
+                        <!-- Text article body fallback (for Ask HN or Self posts) -->
+                        <div id="storyTextContent" class="hidden text-sm bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-150 dark:border-slate-800/60 leading-relaxed text-slate-700 dark:text-slate-300"></div>
+
+                        <!-- Inline External Link Preview Card -->
+                        <div id="externalLinkCard" class="hidden">
+                            <a id="externalLinkAnchor" href="#" target="_blank" rel="noopener noreferrer" class="group block p-4 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-hn-orange dark:hover:border-hn-orange transition-colors">
+                                <div class="flex items-start justify-between">
+                                    <div class="space-y-1">
+                                        <p class="text-xs text-hn-orange font-semibold uppercase tracking-wider">Direct Link</p>
+                                        <h4 id="externalCardTitle" class="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:underline"></h4>
+                                        <p id="externalCardDomain" class="text-xs text-slate-400"></p>
+                                    </div>
+                                    <i data-lucide="external-link" class="w-5 h-5 text-slate-400 group-hover:text-hn-orange shrink-0"></i>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- Comment Thread Section -->
+                        <div class="pt-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="font-bold text-lg flex items-center gap-2">
+                                    Discussion
+                                    <span id="storyDetailCommentCount" class="text-xs bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2.5 py-0.5 rounded-full">0</span>
+                                </h3>
+                                <button onclick="expandAllComments()" class="text-xs font-semibold text-slate-500 hover:text-hn-orange">Expand All</button>
+                            </div>
+
+                            <div id="commentsTree" class="space-y-4">
+                                <!-- Nested comment tree dynamically injected -->
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Script Implementation -->
+    <script>
+        // --- State Management ---
+        const state = {
+            category: 'front_page',
+            page: 0,
+            query: '',
+            stories: [],
+            visited: new Set(JSON.parse(localStorage.getItem('hn_visited') || '[]')),
+            followedStories: JSON.parse(localStorage.getItem('hn_followed_stories') || '[]'),
+            followedComments: JSON.parse(localStorage.getItem('hn_followed_comments') || '[]'),
+            hideVisited: localStorage.getItem('hn_hide_visited') === 'true',
+            theme: localStorage.getItem('hn_theme') || 'dark',
+            activeStoryId: null,
+            activeStory: null
+        };
+
+        const categoriesMap = {
+            front_page: { query: 'tags=front_page', label: 'Top Stories' },
+            new: { query: 'tags=story', label: 'Newest Stories', suffix: '_by_date' },
+            ask: { query: 'tags=ask_hn', label: 'Ask HN' },
+            show: { query: 'tags=show_hn', label: 'Show HN' },
+            jobs: { query: 'tags=job', label: 'Jobs' }
+        };
+
+        // --- Init ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            setupSearch();
+            renderHideVisitedButton();
+            fetchStories();
+            lucide.createIcons();
+        });
+
+        function initTheme() {
+            if (state.theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        function toggleTheme() {
+            state.theme = state.theme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('hn_theme', state.theme);
+            initTheme();
+        }
+
+        // --- API Integration ---
+        async function fetchStories(append = false) {
+            const container = document.getElementById('storiesContainer');
+            if (!append) {
+                container.innerHTML = createFeedSkeleton();
+                state.page = 0;
+            }
+
+            if (state.category === 'followed') {
+                renderFollowedFeed();
+                return;
+            }
+
+            try {
+                const config = categoriesMap[state.category];
+                const searchEndpoint = config.suffix ? 'search_by_date' : 'search';
+                const searchQuery = state.query ? `&query=${encodeURIComponent(state.query)}` : '';
+                
+                const url = `https://hn.algolia.com/api/v1/${searchEndpoint}?${config.query}&page=${state.page}&hitsPerPage=20${searchQuery}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                const formattedStories = data.hits.map(hit => ({
+                    id: hit.objectID,
+                    title: hit.title || hit.story_title || 'Untitled Post',
+                    url: hit.url || hit.story_url || '',
+                    author: hit.author,
+                    points: hit.points || 0,
+                    commentsCount: hit.num_comments || 0,
+                    createdAt: hit.created_at,
+                    text: hit.story_text || hit.comment_text || ''
+                }));
+
+                if (append) {
+                    state.stories = [...state.stories, ...formattedStories];
+                } else {
+                    state.stories = formattedStories;
+                }
+
+                renderStories();
+            } catch (error) {
+                console.error('Error fetching stories:', error);
+                container.innerHTML = `
+                    <div class="p-8 text-center text-red-500">
+                        <i data-lucide="alert-triangle" class="w-8 h-8 mx-auto mb-2"></i>
+                        <p class="text-sm font-semibold">Failed to fetch stories</p>
+                        <p class="text-xs text-slate-400 mt-1">Please check your connection and try again.</p>
+                    </div>`;
+                lucide.createIcons();
+            }
+        }
+
+        async function loadStoryDetails(storyId) {
+            state.activeStoryId = storyId;
+            toggleDetailPane(true);
+            
+            const emptyState = document.getElementById('emptyState');
+            const loader = document.getElementById('detailsLoader');
+            const storyContainer = document.getElementById('storyContainer');
+            
+            emptyState.classList.add('hidden');
+            loader.classList.remove('hidden');
+            storyContainer.classList.add('hidden');
+
+            // Track visited state
+            state.visited.add(String(storyId));
+            localStorage.setItem('hn_visited', JSON.stringify(Array.from(state.visited)));
+            markStoryAsVisitedInUI(storyId);
+
+            try {
+                const response = await fetch(`https://hn.algolia.com/api/v1/items/${storyId}`);
+                const story = await response.json();
+                state.activeStory = story;
+
+                renderStoryDetailHeader(story);
+                renderCommentsTree(story.children);
+                
+                loader.classList.add('hidden');
+                storyContainer.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading details:', error);
+                loader.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                emptyState.innerHTML = `
+                    <div class="text-red-500 text-center">
+                        <i data-lucide="alert-triangle" class="w-10 h-10 mx-auto mb-2"></i>
+                        <p class="font-semibold">Unable to fetch comment thread</p>
+                    </div>`;
+            }
+            lucide.createIcons();
+        }
+
+        // --- Render UI elements ---
+        function renderStories() {
+            const container = document.getElementById('storiesContainer');
+            const totalCountText = document.getElementById('storyCountText');
+            
+            // Filter out visited if toggle is true
+            const filteredStories = state.hideVisited 
+                ? state.stories.filter(story => !state.visited.has(String(story.id)))
+                : state.stories;
+
+            totalCountText.textContent = `${filteredStories.length} stories found`;
+
+            if (filteredStories.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center text-slate-500">
+                        <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2"></i>
+                        <p class="text-sm">No stories available.</p>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            const html = filteredStories.map(story => {
+                const hasUrl = !!story.url;
+                const domain = hasUrl ? new URL(story.url).hostname.replace('www.', '') : '';
+                const isVisited = state.visited.has(String(story.id));
+                const isFollowed = state.followedStories.some(s => String(s.id) === String(story.id));
+                
+                // Formulate modern category/thumbnail look fallback
+                let thumbnailHtml = '';
+                if (hasUrl) {
+                    thumbnailHtml = `
+                        <div class="relative w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 border border-slate-200/50 dark:border-slate-700/50 overflow-hidden">
+                            <img class="w-6 h-6 object-contain" src="https://www.google.com/s2/favicons?sz=64&domain=${domain}" alt="" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220%22><rect width=%2224%22 fill=%22%23cbd5e1%22></rect></svg>'">
+                        </div>`;
+                } else {
+                    const fallbackBg = story.title.toLowerCase().includes('show hn') 
+                        ? 'from-blue-500 to-indigo-600' 
+                        : 'from-amber-500 to-hn-orange';
+                    thumbnailHtml = `
+                        <div class="w-12 h-12 rounded-lg bg-gradient-to-br ${fallbackBg} flex flex-col items-center justify-center shrink-0 text-white font-bold text-xs select-none">
+                            <span>HN</span>
+                        </div>`;
+                }
+
+                return `
+                    <div id="story-card-${story.id}" onclick="loadStoryDetails('${story.id}')" 
+                         class="p-4 flex gap-4 hover:bg-white dark:hover:bg-slate-800/40 cursor-pointer transition-all ${isVisited ? 'opacity-60' : ''} ${String(state.activeStoryId) === String(story.id) ? 'bg-white dark:bg-slate-800 border-l-4 border-l-hn-orange pl-3' : ''}">
+                        
+                        ${thumbnailHtml}
+
+                        <div class="flex-1 min-w-0 flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-semibold text-sm leading-tight text-slate-900 dark:text-slate-100 line-clamp-2 hover:text-hn-orange dark:hover:text-hn-orange transition-colors">
+                                    ${story.title}
+                                </h3>
+                                ${domain ? `<span class="text-[11px] text-slate-400 font-medium mt-1 inline-block hover:underline">${domain}</span>` : ''}
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 mt-2">
+                                <span class="flex items-center gap-1 font-medium text-slate-700 dark:text-slate-300">
+                                    <i data-lucide="triangle" class="w-3 h-3 text-hn-orange fill-hn-orange"></i> ${story.points}
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <i data-lucide="message-square" class="w-3 h-3"></i> ${story.commentsCount}
+                                </span>
+                                <span>by ${story.author}</span>
+                                <span>${formatTimeAgo(story.createdAt)}</span>
+                            </div>
+                        </div>
+
+                        <!-- Mini Action Bar -->
+                        <div class="flex flex-col justify-between items-end shrink-0" onclick="event.stopPropagation()">
+                            <button onclick="toggleFollowStory(${JSON.stringify(story).replace(/"/g, '&quot;')})" 
+                                    class="p-1 rounded text-slate-400 hover:text-hn-orange hover:bg-slate-100 dark:hover:bg-slate-800"
+                                    title="${isFollowed ? 'Unfollow Story' : 'Follow Story'}">
+                                <i data-lucide="bookmark" class="w-4 h-4 ${isFollowed ? 'fill-hn-orange text-hn-orange' : ''}"></i>
+                            </button>
+                            <button onclick="toggleSingleVisited('${story.id}')" 
+                                    class="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                    title="${isVisited ? 'Mark Unread' : 'Mark Read'}">
+                                <i data-lucide="${isVisited ? 'eye-off' : 'eye'}" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function renderStoryDetailHeader(story) {
+            const titleEl = document.getElementById('storyDetailTitle');
+            const authorEl = document.getElementById('storyDetailAuthor');
+            const timeEl = document.getElementById('storyDetailTime');
+            const scoreEl = document.getElementById('storyDetailScore');
+            const commCountEl = document.getElementById('storyDetailCommentCount');
+            const textContentEl = document.getElementById('storyTextContent');
+            const linkCardEl = document.getElementById('externalLinkCard');
+            const actionsEl = document.getElementById('storyActions');
+
+            titleEl.textContent = story.title;
+            authorEl.textContent = `by ${story.author}`;
+            timeEl.textContent = formatTimeAgo(story.created_at);
+            scoreEl.textContent = `${story.points} points`;
+            commCountEl.textContent = story.children ? story.children.length : 0;
+
+            // Handle original Text/Self Post content
+            if (story.text) {
+                textContentEl.innerHTML = story.text;
+                textContentEl.classList.remove('hidden');
+            } else {
+                textContentEl.classList.add('hidden');
+                textContentEl.innerHTML = '';
+            }
+
+            // Handle external links
+            if (story.url) {
+                const domain = new URL(story.url).hostname;
+                document.getElementById('externalCardTitle').textContent = story.title;
+                document.getElementById('externalCardDomain').textContent = domain;
+                document.getElementById('externalLinkAnchor').href = story.url;
+                linkCardEl.classList.remove('hidden');
+            } else {
+                linkCardEl.classList.add('hidden');
+            }
+
+            // Header follow button state mapping
+            const isFollowed = state.followedStories.some(s => String(s.id) === String(story.id));
+            actionsEl.innerHTML = `
+                <button onclick="toggleFollowStory(${JSON.stringify({
+                    id: story.id,
+                    title: story.title,
+                    url: story.url || '',
+                    author: story.author,
+                    points: story.points,
+                    commentsCount: story.children ? story.children.length : 0,
+                    createdAt: story.created_at
+                }).replace(/"/g, '&quot;')})" 
+                        class="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold">
+                    <i data-lucide="bookmark" class="w-3.5 h-3.5 ${isFollowed ? 'fill-hn-orange text-hn-orange' : ''}"></i>
+                    ${isFollowed ? 'Following' : 'Follow Story'}
+                </button>
+            `;
+            lucide.createIcons();
+        }
+
+        // --- Collapsible Tree Nested Comment System ---
+        function renderCommentsTree(comments) {
+            const container = document.getElementById('commentsTree');
+            if (!comments || comments.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-6 text-slate-400">
+                        <p class="text-sm">No comments yet in this thread.</p>
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            comments.forEach(comment => {
+                if (comment.author && comment.text) {
+                    html += buildCommentHTML(comment);
+                }
+            });
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function buildCommentHTML(comment) {
+            const hasReplies = comment.children && comment.children.length > 0;
+            const isFollowed = state.followedComments.some(c => String(c.id) === String(comment.id));
+            
+            let repliesHTML = '';
+            if (hasReplies) {
+                repliesHTML = `<div id="replies-container-${comment.id}" class="comment-branch pl-4 mt-3 space-y-4">`;
+                comment.children.forEach(child => {
+                    if (child.author && child.text) {
+                        repliesHTML += buildCommentHTML(child);
+                    }
+                });
+                repliesHTML += '</div>';
+            }
+
+            return `
+                <div id="comment-${comment.id}" class="relative group text-sm border-l-2 border-transparent hover:border-slate-200 dark:hover:border-slate-800 transition-colors pl-3">
+                    
+                    <!-- Comment Meta Header -->
+                    <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-semibold text-slate-700 dark:text-slate-300">${comment.author}</span>
+                            <span>${formatTimeAgo(comment.created_at)}</span>
+                            ${hasReplies ? `
+                                <button onclick="toggleCollapseComment('${comment.id}')" id="collapse-btn-${comment.id}" 
+                                        class="text-[10px] uppercase font-bold text-slate-400 hover:text-hn-orange flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                    [-] collapse
+                                </button>
+                            ` : ''}
+                        </div>
+
+                        <!-- Action buttons for standard users -->
+                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="toggleFollowComment(${JSON.stringify({
+                                id: comment.id,
+                                author: comment.author,
+                                text: comment.text.substring(0, 100),
+                                storyId: state.activeStoryId,
+                                storyTitle: state.activeStory ? state.activeStory.title : ''
+                            }).replace(/"/g, '&quot;')})" 
+                                    class="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-hn-orange"
+                                    title="${isFollowed ? 'Unfollow Comment' : 'Follow Comment'}">
+                                <i data-lucide="bookmark" class="w-3.5 h-3.5 ${isFollowed ? 'fill-hn-orange text-hn-orange' : ''}"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Comment Body -->
+                    <div id="comment-body-${comment.id}" class="prose dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed break-words overflow-x-auto">
+                        ${comment.text}
+                    </div>
+
+                    <!-- Nested Replies Container -->
+                    ${repliesHTML}
+                </div>`;
+        }
+
+        // Collapse node logic
+        function toggleCollapseComment(commentId) {
+            const repliesContainer = document.getElementById(`replies-container-${commentId}`);
+            const body = document.getElementById(`comment-body-${commentId}`);
+            const btn = document.getElementById(`collapse-btn-${commentId}`);
+
+            if (repliesContainer) {
+                if (repliesContainer.classList.contains('hidden')) {
+                    repliesContainer.classList.remove('hidden');
+                    body.classList.remove('opacity-50', 'text-slate-400');
+                    btn.innerHTML = '[-] collapse';
+                } else {
+                    repliesContainer.classList.add('hidden');
+                    body.classList.add('opacity-50', 'text-slate-400');
+                    btn.innerHTML = '[+] expand';
+                }
+            }
+        }
+
+        function expandAllComments() {
+            if (!state.activeStory || !state.activeStory.children) return;
+            const containers = document.querySelectorAll('[id^="replies-container-"]');
+            containers.forEach(container => container.classList.remove('hidden'));
+            
+            const bodies = document.querySelectorAll('[id^="comment-body-"]');
+            bodies.forEach(b => b.classList.remove('opacity-50', 'text-slate-400'));
+            
+            const buttons = document.querySelectorAll('[id^="collapse-btn-"]');
+            buttons.forEach(btn => btn.innerHTML = '[-] collapse');
+        }
+
+        // --- Followed Tab View ---
+        function renderFollowedFeed() {
+            const container = document.getElementById('storiesContainer');
+            const totalCountText = document.getElementById('storyCountText');
+            
+            totalCountText.textContent = `${state.followedStories.length} stories & ${state.followedComments.length} comments bookmarked`;
+
+            if (state.followedStories.length === 0 && state.followedComments.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center text-slate-500">
+                        <i data-lucide="bookmark-x" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                        <p class="text-sm font-semibold">You aren't following anything yet.</p>
+                        <p class="text-xs text-slate-400 max-w-xs mx-auto mt-1">Bookmark high priority stories or comments to track active discussions.</p>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            let html = '';
+
+            if (state.followedStories.length > 0) {
+                html += `<div class="p-2.5 bg-slate-100 dark:bg-slate-800/40 text-[10px] font-bold uppercase tracking-wider text-slate-400">Followed Stories</div>`;
+                html += state.followedStories.map(story => {
+                    const domain = story.url ? new URL(story.url).hostname.replace('www.', '') : '';
+                    return `
+                        <div onclick="loadStoryDetails('${story.id}')" 
+                             class="p-4 flex gap-4 hover:bg-white dark:hover:bg-slate-800/40 cursor-pointer transition-all">
+                            <div class="relative w-10 h-10 rounded bg-slate-150 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                                <i data-lucide="newspaper" class="w-5 h-5 text-slate-400"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-semibold text-sm leading-tight text-slate-900 dark:text-slate-100 line-clamp-2">${story.title}</h3>
+                                <div class="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                                    <span>${story.points} pts</span>
+                                    <span>•</span>
+                                    <span>${story.commentsCount} comments</span>
+                                </div>
+                            </div>
+                        </div>`;
+                }).join('');
+            }
+
+            if (state.followedComments.length > 0) {
+                html += `<div class="p-2.5 bg-slate-100 dark:bg-slate-800/40 text-[10px] font-bold uppercase tracking-wider text-slate-400">Followed Comment Snippets</div>`;
+                html += state.followedComments.map(comment => {
+                    return `
+                        <div onclick="loadStoryDetails('${comment.storyId}')" 
+                             class="p-4 hover:bg-white dark:hover:bg-slate-800/40 cursor-pointer transition-all border-b border-slate-100 dark:border-slate-800">
+                            <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+                                <span>Followed comment by <strong class="text-slate-600 dark:text-slate-300">${comment.author}</strong></span>
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                            </div>
+                            <p class="text-xs italic text-slate-500 line-clamp-2 bg-slate-50 dark:bg-slate-900 p-2 rounded">"${comment.text.replace(/<\/?[^>]+(>|$)/g, "")}"</p>
+                            <span class="text-[10px] text-hn-orange block mt-1.5 font-medium truncate">Context: ${comment.storyTitle}</span>
+                        </div>`;
+                }).join('');
+            }
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        // --- Event Handlers & LocalStorage persistence ---
+        function changeCategory(cat) {
+            state.category = cat;
+            
+            // Highlight active navigation tab
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.className = "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800";
+            });
+            const activeBtn = document.getElementById(`tab-${cat}`);
+            if (activeBtn) {
+                activeBtn.className = "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-hn-orange/10 text-hn-orange font-semibold";
+            }
+
+            // Clean search inputs across shifts
+            document.getElementById('searchInput').value = '';
+            state.query = '';
+
+            fetchStories();
+        }
+
+        function loadMoreStories() {
+            state.page += 1;
+            fetchStories(true);
+        }
+
+        function setupSearch() {
+            const input = document.getElementById('searchInput');
+            let debounceTimer;
+            input.addEventListener('input', (e) => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    state.query = e.target.value.trim();
+                    fetchStories();
+                }, 400);
+            });
+        }
+
+        function toggleFollowStory(story) {
+            const index = state.followedStories.findIndex(s => String(s.id) === String(story.id));
+            if (index > -1) {
+                state.followedStories.splice(index, 1);
+            } else {
+                state.followedStories.push(story);
+            }
+            localStorage.setItem('hn_followed_stories', JSON.stringify(state.followedStories));
+            
+            // Keep interactive layouts consistent
+            if (state.category === 'followed') {
+                renderFollowedFeed();
+            } else {
+                renderStories();
+            }
+            if (state.activeStoryId && String(state.activeStoryId) === String(story.id)) {
+                loadStoryDetails(story.id);
+            }
+        }
+
+        function toggleFollowComment(comment) {
+            const index = state.followedComments.findIndex(c => String(c.id) === String(comment.id));
+            if (index > -1) {
+                state.followedComments.splice(index, 1);
+            } else {
+                state.followedComments.push(comment);
+            }
+            localStorage.setItem('hn_followed_comments', JSON.stringify(state.followedComments));
+            
+            if (state.category === 'followed') {
+                renderFollowedFeed();
+            } else if (state.activeStory) {
+                renderCommentsTree(state.activeStory.children);
+            }
+        }
+
+        function toggleHideVisited() {
+            state.hideVisited = !state.hideVisited;
+            localStorage.setItem('hn_hide_visited', state.hideVisited);
+            renderHideVisitedButton();
+            renderStories();
+        }
+
+        function renderHideVisitedButton() {
+            const btn = document.getElementById('hideVisitedBtn');
+            if (state.hideVisited) {
+                btn.className = "p-2 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-500 flex items-center justify-center";
+                btn.title = "Showing Read (Unhide)";
+            } else {
+                btn.className = "p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 flex items-center justify-center";
+                btn.title = "Hide Read Stories";
+            }
+        }
+
+        function toggleSingleVisited(storyId) {
+            if (state.visited.has(String(storyId))) {
+                state.visited.delete(String(storyId));
+            } else {
+                state.visited.add(String(storyId));
+            }
+            localStorage.setItem('hn_visited', JSON.stringify(Array.from(state.visited)));
+            
+            // Redraw card list elements or re-calculate list
+            if (state.hideVisited) {
+                renderStories();
+            } else {
+                const card = document.getElementById(`story-card-${storyId}`);
+                if (card) {
+                    if (state.visited.has(String(storyId))) {
+                        card.classList.add('opacity-60');
+                    } else {
+                        card.classList.remove('opacity-60');
+                    }
+                }
+            }
+        }
+
+        function markStoryAsVisitedInUI(storyId) {
+            const card = document.getElementById(`story-card-${storyId}`);
+            if (card) {
+                card.classList.add('opacity-60');
+            }
+        }
+
+        function clearVisited() {
+            if (confirm("Clear all read history markers?")) {
+                state.visited.clear();
+                localStorage.removeItem('hn_visited');
+                renderStories();
+            }
+        }
+
+        // --- Mobile View Mechanics ---
+        function toggleDetailPane(show) {
+            const rightPanel = document.getElementById('rightPanel');
+            if (show) {
+                rightPanel.classList.remove('hidden');
+            } else {
+                rightPanel.classList.add('hidden');
+            }
+        }
+
+        function closeDetailView() {
+            toggleDetailPane(false);
+            state.activeStoryId = null;
+            state.activeStory = null;
+            renderStories(); // Clear highlighted states on feed
+        }
+
+        // --- Utility Helpers ---
+        function formatTimeAgo(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const seconds = Math.floor((new Date() - date) / 1000);
+            
+            let interval = Math.floor(seconds / 31536000);
+            if (interval >= 1) return `${interval}y ago`;
+            
+            interval = Math.floor(seconds / 2592000);
+            if (interval >= 1) return `${interval}mo ago`;
+            
+            interval = Math.floor(seconds / 86400);
+            if (interval >= 1) return `${interval}d ago`;
+            
+            interval = Math.floor(seconds / 3600);
+            if (interval >= 1) return `${interval}h ago`;
+            
+            interval = Math.floor(seconds / 60);
+            if (interval >= 1) return `${interval}m ago`;
+            
+            return 'just now';
+        }
+
+        function createFeedSkeleton() {
+            return Array.from({ length: 8 }).map(() => `
+                <div class="p-4 flex gap-4 animate-pulse">
+                    <div class="w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-lg shrink-0"></div>
+                    <div class="flex-1 space-y-3 py-1">
+                        <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded w-4/5"></div>
+                        <div class="h-3 bg-slate-100 dark:bg-slate-800/60 rounded w-1/2"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

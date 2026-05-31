@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Y Combinator Reader — HN</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.0/index.css">
+<style>
+  :root {
+    --bg: #0f1115;
+    --bg-elev: #171a21;
+    --bg-elev-2: #1e222b;
+    --border: #262b36;
+    --text: #e6e8ee;
+    --text-dim: #8b93a7;
+    --text-faint: #5b6377;
+    --accent: #ff6b35;
+    --accent-dim: #ff6b3520;
+    --link: #60a5fa;
+    --visited: #6b7280;
+    --success: #10b981;
+    --danger: #ef4444;
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  [data-theme="light"] {
+    --bg: #fafaf7;
+    --bg-elev: #ffffff;
+    --bg-elev-2: #f4f4ef;
+    --border: #e5e5e0;
+    --text: #1a1a1a;
+    --text-dim: #6b6b6b;
+    --text-faint: #9a9a9a;
+    --accent: #ff6b35;
+    --accent-dim: #ff6b3515;
+    --link: #2563eb;
+    --visited: #9ca3af;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 240px;
+    background: var(--bg-elev);
+    border-right: 1px solid var(--border);
+    padding: 20px 14px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg-elev);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    backdrop-filter: blur(10px);
+  }
+  .content { padding: 24px; max-width: 960px; margin: 0 auto; width: 100%; }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    margin-bottom: 22px;
+    cursor: pointer;
+  }
+  .brand-logo {
+    width: 34px; height: 34px;
+    background: var(--accent);
+    border-radius: 7px;
+    display: grid; place-items: center;
+    font-weight: 800;
+    color: white;
+    font-size: 18px;
+    box-shadow: 0 4px 12px var(--accent-dim);
+  }
+  .brand-name { font-weight: 700; font-size: 15px; letter-spacing: -0.01em; }
+  .brand-sub { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  .nav-section { margin-bottom: 24px; }
+  .nav-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+    padding: 0 10px;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    color: var(--text-dim);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .nav-item:hover { background: var(--bg-elev-2); color: var(--text); }
+  .nav-item.active { background: var(--accent-dim); color: var(--accent); }
+  .nav-item .count {
+    margin-left: auto;
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: var(--bg-elev-2);
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+  .nav-item.active .count { background: var(--accent); color: white; }
+  .nav-icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .search {
+    flex: 1;
+    max-width: 420px;
+    position: relative;
+  }
+  .search input {
+    width: 100%;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 14px 9px 38px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border 0.15s;
+  }
+  .search input:focus { border-color: var(--accent); }
+  .search-icon {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-faint);
+    width: 16px; height: 16px;
+  }
+  .kbd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-faint);
+  }
+
+  .icon-btn {
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { color: var(--text); border-color: var(--accent); }
+  .icon-btn svg { width: 16px; height: 16px; }
+
+  .toggle-switch {
+    position: relative;
+    width: 34px; height: 20px;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    background: var(--text-dim);
+    border-radius: 50%;
+    top: 2px; left: 2px;
+    transition: all 0.2s;
+  }
+  .toggle-switch.on { background: var(--accent); border-color: var(--accent); }
+  .toggle-switch.on::after { left: 16px; background: white; }
+
+  .story {
+    display: flex;
+    gap: 14px;
+    padding: 14px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .story:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .story.visited { opacity: 0.55; }
+  .story.visited:hover { opacity: 0.85; }
+
+  .thumb {
+    width: 72px; height: 72px;
+    border-radius: 8px;
+    background: var(--bg-elev-2);
+    flex-shrink: 0;
+    overflow: hidden;
+    position: relative;
+    display: grid; place-items: center;
+    border: 1px solid var(--border);
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb-fallback {
+    width: 100%; height: 100%;
+    display: grid; place-items: center;
+    font-weight: 700;
+    font-size: 24px;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+  }
+
+  .story-body { flex: 1; min-width: 0; }
+  .story-title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 6px;
+    color: var(--text);
+    text-decoration: none;
+    display: block;
+  }
+  .story-title:hover { color: var(--accent); }
+  .story.visited .story-title { color: var(--visited); }
+  .story-domain {
+    font-size: 12px;
+    color: var(--text-faint);
+    margin-bottom: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .story-meta {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 12px;
+    color: var(--text-dim);
+    flex-wrap: wrap;
+  }
+  .meta-item { display: inline-flex; align-items: center; gap: 4px; }
+  .meta-item svg { width: 13px; height: 13px; }
+
+  .story-actions {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+  }
+  .action-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: inherit;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+  .action-btn:hover { color: var(--text); border-color: var(--accent); }
+  .action-btn.following { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+  .action-btn svg { width: 12px; height: 12px; }
+
+  .story-rank {
+    color: var(--text-faint);
+    font-weight: 700;
+    font-size: 13px;
+    width: 24px;
+    text-align: right;
+    padding-top: 2px;
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .comment-view {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 20px;
+  }
+  .cv-header {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cv-title { font-size: 20px; font-weight: 700; line-height: 1.3; margin-bottom: 8px; }
+  .cv-title a { color: var(--text); text-decoration: none; }
+  .cv-title a:hover { color: var(--accent); }
+  .cv-body-text {
+    color: var(--text);
+    line-height: 1.6;
+    margin: 14px 0;
+  }
+  .cv-body-text a { color: var(--link); }
+  .cv-body-text p { margin-bottom: 10px; }
+  .cv-body-text pre {
+    background: var(--bg-elev-2);
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+  .cv-body-text code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-elev-2);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+  .cv-body-text pre code { background: none; padding: 0; }
+
+  .comments-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .seg {
+    display: inline-flex;
+    background: var(--bg-elev-2);
+    border-radius: 7px;
+    padding: 2px;
+    border: 1px solid var(--border);
+  }
+  .seg button {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    padding: 5px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 500;
+  }
+  .seg button.active { background: var(--bg-elev); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+
+  .comment {
+    position: relative;
+    padding-left: 14px;
+  }
+  .comment-line {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    border-radius: 1px;
+  }
+  .comment-line:hover { background: var(--accent); }
+  .comment.collapsed .comment-line { background: var(--accent); }
+  .comment-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .comment-author { font-weight: 600; color: var(--accent); }
+  .comment-author.op { background: var(--accent-dim); padding: 1px 6px; border-radius: 3px; color: var(--accent); }
+  .comment-toggle {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 1px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+  }
+  .comment-toggle:hover { color: var(--text); border-color: var(--accent); }
+  .comment-follow {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-faint);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .comment-follow:hover { color: var(--accent); border-color: var(--accent); }
+  .comment-follow.active { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+  .comment-body {
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+  .comment-body a { color: var(--link); }
+  .comment-body p { margin-bottom: 8px; }
+  .comment-body pre {
+    background: var(--bg-elev-2);
+    padding: 10px;
+    border-radius: 5px;
+    overflow-x: auto;
+    font-size: 12px;
+    margin: 8px 0;
+  }
+  .comment-body code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-elev-2);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.88em;
+  }
+  .comment-body pre code { background: none; padding: 0; }
+  .comment-body blockquote {
+    border-left: 2px solid var(--border);
+    padding-left: 12px;
+    color: var(--text-dim);
+    margin: 8px 0;
+  }
+  .comment.collapsed .comment-body,
+  .comment.collapsed .comment-children { display: none; }
+  .comment-children { margin-left: 14px; margin-top: 12px; }
+  .load-more-comments {
+    background: var(--bg-elev-2);
+    border: 1px dashed var(--border);
+    color: var(--text-dim);
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    margin: 8px 0;
+    width: 100%;
+    text-align: left;
+  }
+  .load-more-comments:hover { color: var(--accent); border-color: var(--accent); }
+
+  .loader {
+    display: flex;
+    justify-content: center;
+    padding: 40px;
+    gap: 6px;
+  }
+  .loader-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite ease-in-out;
+  }
+  .loader-dot:nth-child(2) { animation-delay: 0.15s; }
+  .loader-dot:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+  }
+  .empty-icon {
+    width: 56px; height: 56px;
+    margin: 0 auto 16px;
+    color: var(--text-faint);
+  }
+  .empty h3 { color: var(--text); margin-bottom: 6px; font-size: 17px; }
+  .empty p { font-size: 14px; }
+
+  .back {
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .back:hover { border-color: var(--accent); }
+
+  .settings {
+    position: relative;
+  }
+  .settings-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    width: 260px;
+    box-shadow: var(--shadow);
+    z-index: 20;
+  }
+  .setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 13px;
+    gap: 12px;
+  }
+  .setting-row + .setting-row { border-top: 1px solid var(--border); margin-top: 6px; padding-top: 10px; }
+  .setting-label { color: var(--text); font-weight: 500; }
+  .setting-sub { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    padding: 10px 18px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s;
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 720px) {
+    .sidebar { display: none; }
+    .content { padding: 14px; }
+    .topbar { padding: 10px 14px; }
+    .thumb { width: 56px; height: 56px; }
+    .story-rank { display: none; }
+    .story-actions { flex-direction: column; gap: 4px; }
+    .action-btn { font-size: 11px; padding: 3px 7px; }
+  }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand" onclick="navigate('top')">
+      <div class="brand-logo">Y</div>
+      <div>
+        <div class="brand-name">Y Reader</div>
+        <div class="brand-sub">Hacker News</div>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Feeds</div>
+      <div class="nav-item" data-feed="top" onclick="navigate('top')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Top
+      </div>
+      <div class="nav-item" data-feed="new" onclick="navigate('new')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        New
+      </div>
+      <div class="nav-item" data-feed="best" onclick="navigate('best')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15 8.5 22 9.3 17 14 18.2 21 12 17.8 5.8 21 7 14 2 9.3 9 8.5 12 2"/></svg>
+        Best
+      </div>
+      <div class="nav-item" data-feed="ask" onclick="navigate('ask')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Ask
+      </div>
+      <div class="nav-item" data-feed="show" onclick="navigate('show')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        Show
+      </div>
+      <div class="nav-item" data-feed="jobs" onclick="navigate('jobs')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        Jobs
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Yours</div>
+      <div class="nav-item" data-feed="followed" onclick="navigate('followed')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        Following
+        <span class="count" id="followed-count">0</span>
+      </div>
+      <div class="nav-item" data-feed="visited" onclick="navigate('visited')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Visited
+        <span class="count" id="visited-count">0</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Keyboard</div>
+      <div style="font-size:11px;color:var(--text-faint);padding:0 10px;line-height:1.8">
+        <div><span class="kbd">j</span> / <span class="kbd">k</span> navigate</div>
+        <div><span class="kbd">o</span> open link</div>
+        <div><span class="kbd">c</span> comments</div>
+        <div><span class="kbd">/</span> search</div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="icon-btn" onclick="history.back()" title="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </button>
+      <div class="search">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="search-input" type="text" placeholder="Filter stories in current feed…" />
+      </div>
+      <div class="settings">
+        <button class="icon-btn" id="settings-btn" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <div class="settings-menu" id="settings-menu" style="display:none">
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Hide visited</div>
+              <div class="setting-sub">Completely hide read stories</div>
+            </div>
+            <div class="toggle-switch" id="toggle-hide-visited" onclick="toggleSetting('hideVisited')"></div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Dim only</div>
+              <div class="setting-sub">Dim visited instead of hiding</div>
+            </div>
+            <div class="toggle-switch on" id="toggle-dim-only" onclick="toggleSetting('dimOnly')"></div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Dark mode</div>
+              <div class="setting-sub">Easy on the eyes</div>
+            </div>
+            <div class="toggle-switch on" id="toggle-theme" onclick="toggleSetting('dark')"></div>
+          </div>
+          <div class="setting-row" style="border-top:1px solid var(--border);padding-top:10px">
+            <button class="action-btn" onclick="clearVisited()" style="width:100%;justify-content:center">Clear visited history</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://hacker-news.firebaseio.com/v0';
+const CACHE = new Map();
+const STORY_CACHE = new Map();
+
+const state = {
+  feed: 'top',
+  storyIds: [],
+  stories: [],
+  page: 0,
+  pageSize: 30,
+  loading: false,
+  currentStory: null,
+  currentStoryData: null,
+  commentSort: 'top',
+  search: '',
+  settings: {
+    hideVisited: false,
+    dimOnly: true,
+    dark: true
+  },
+  visited: new Set(),
+  followed: new Map(),
+  selectedIndex: -1
+};
+
+function loadState() {
+  try {
+    const visited = JSON.parse(localStorage.getItem('hn_visited') || '[]');
+    state.visited = new Set(visited);
+    const followed = JSON.parse(localStorage.getItem('hn_followed') || '[]');
+    state.followed = new Map(followed.map(f => [f.commentId, f]));
+    const settings = JSON.parse(localStorage.getItem('hn_settings') || '{}');
+    state.settings = { ...state.settings, ...settings };
+    applyTheme();
+    updateToggles();
+    updateCounts();
+  } catch(e) { console.error(e); }
+}
+
+function saveState() {
+  localStorage.setItem('hn_visited', JSON.stringify([...state.visited]));
+  localStorage.setItem('hn_followed', JSON.stringify([...state.followed.values()]));
+  localStorage.setItem('hn_settings', JSON.stringify(state.settings));
+}
+
+function updateCounts() {
+  document.getElementById('visited-count').textContent = state.visited.size;
+  document.getElementById('followed-count').textContent = state.followed.size;
+}
+
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', state.settings.dark ? 'dark' : 'light');
+}
+
+function updateToggles() {
+  document.getElementById('toggle-hide-visited').classList.toggle('on', state.settings.hideVisited);
+  document.getElementById('toggle-dim-only').classList.toggle('on', state.settings.dimOnly);
+  document.getElementById('toggle-theme').classList.toggle('on', state.settings.dark);
+}
+
+function toggleSetting(key) {
+  if (key === 'dark') state.settings.dark = !state.settings.dark;
+  else if (key === 'hideVisited') state.settings.hideVisited = !state.settings.hideVisited;
+  else if (key === 'dimOnly') state.settings.dimOnly = !state.settings.dimOnly;
+  saveState();
+  updateToggles();
+  applyTheme();
+  if (state.currentStory) renderComments();
+  else renderFeed();
+}
+
+function clearVisited() {
+  state.visited.clear();
+  saveState();
+  updateCounts();
+  toast('Visited history cleared');
+  if (!state.currentStory) renderFeed();
+}
+
+async function apiFetch(path) {
+  if (CACHE.has(path)) return CACHE.get(path);
+  const res = await fetch(`${API}${path}`);
+  const data = await res.json();
+  CACHE.set(path, data);
+  return data;
+}
+
+async function fetchItem(id) {
+  if (STORY_CACHE.has(id)) return STORY_CACHE.get(id);
+  const item = await apiFetch(`/item/${id}.json`);
+  if (item) STORY_CACHE.set(id, item);
+  return item;
+}
+
+async function fetchStoryIds(feed) {
+  const map = {
+    top: '/topstories.json',
+    new: '/newstories.json',
+    best: '/beststories.json',
+    ask: '/askstories.json',
+    show: '/showstories.json',
+    jobs: '/jobstories.json'
+  };
+  return await apiFetch(map[feed]);
+}
+
+async function fetchItems(ids) {
+  const results = [];
+  const CONCURRENCY = 10;
+  for (let i = 0; i < ids.length; i += CONCURRENCY) {
+    const batch = ids.slice(i, i + CONCURRENCY);
+    const batchResults = await Promise.all(batch.map(id => fetchItem(id).catch(() => null)));
+    results.push(...batchResults);
+  }
+  return results.filter(Boolean);
+}
+
+function timeAgo(ts) {
+  const s = Math.floor(Date.now() / 1000 - ts);
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s/60)}m ago`;
+  if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+  if (s < 2592000) return `${Math.floor(s/86400)}d ago`;
+  if (s < 31536000) return `${Math.floor(s/2592000)}mo ago`;
+  return `${Math.floor(s/31536000)}y ago`;
+}
+
+function getDomain(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    return u.hostname.replace(/^www\./, '');
+  } catch { return null; }
+}
+
+function stringColor(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  const h = Math.abs(hash) % 360;
+  return `hsl(${h}, 55%, 55%)`;
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function sanitizeHtml(html) {
+  if (!html) return '';
+  return html
+    .replace(/&#x27;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x2F;/g, '/');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function renderThumb(story) {
+  const domain = getDomain(story.url) || story.title || 'hn';
+  const initial = domain.charAt(0).toUpperCase();
+  const color = stringColor(domain);
+  const color2 = stringColor(domain + 'x');
+  const faviconUrl = story.url ? `https://icon.horse/icon/${getDomain(story.url)}` : '';
+  if (faviconUrl) {
+    return `
+      <div class="thumb">
+        <img src="${faviconUrl}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'" loading="lazy">
+        <div class="thumb-fallback" style="display:none;background:linear-gradient(135deg,${color},${color2})">${escapeHtml(initial)}</div>
+      </div>`;
+  }
+  return `
+    <div class="thumb">
+      <div class="thumb-fallback" style="background:linear-gradient(135deg,${color},${color2})">${escapeHtml(initial)}</div>
+    </div>`;
+}
+
+async function loadFeed(feed) {
+  state.feed = feed;
+  state.page = 0;
+  state.stories = [];
+  state.selectedIndex = -1;
+  state.currentStory = null;
+  state.currentStoryData = null;
+
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.feed === feed);
+  });
+
+  const content = document.getElementById('content');
+  const feedName = feed === 'followed' ? 'Following' : feed.charAt(0).toUpperCase() + feed.slice(1);
+  content.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h1 style="font-size:22px;font-weight:700;letter-spacing:-0.02em">${feedName} Stories</h1>
+      <span class="mono" style="font-size:12px;color:var(--text-faint)" id="story-count"></span>
+    </div>
+    <div id="stories"></div>
+    <div id="load-more"></div>`;
+
+  if (feed === 'followed') {
+    renderFollowedView();
+    return;
+  }
+  if (feed === 'visited') {
+    renderVisitedView();
+    return;
+  }
+
+  try {
+    const ids = await fetchStoryIds(feed);
+    state.storyIds = ids;
+    document.getElementById('story-count').textContent = `${ids.length} stories`;
+    await loadMore();
+  } catch(e) {
+    content.innerHTML = `<div class="empty"><h3>Failed to load</h3><p>${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+async function loadMore() {
+  if (state.loading) return;
+  state.loading = true;
+  const storiesEl = document.getElementById('stories');
+  const loadMoreEl = document.getElementById('load-more');
+  loadMoreEl.innerHTML = '<div class="loader"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div>';
+
+  const start = state.page * state.pageSize;
+  const end = start + state.pageSize;
+  const ids = state.storyIds.slice(start, end);
+  const items = await fetchItems(ids);
+  state.stories.push(...items);
+  state.page++;
+
+  renderStoryList();
+  state.loading = false;
+
+  if (end < state.storyIds.length) {
+    loadMoreEl.innerHTML = `<button class="action-btn" style="width:100%;justify-content:center;padding:10px" onclick="loadMore()">Load more stories</button>`;
+  } else {
+    loadMoreEl.innerHTML = '';
+  }
+}
+
+function renderStoryList() {
+  const storiesEl = document.getElementById('stories');
+  let stories = state.stories.slice();
+  if (state.search) {
+    const q = state.search.toLowerCase();
+    stories = stories.filter(s => (s.title || '').toLowerCase().includes(q) || (s.by || '').toLowerCase().includes(q));
+  }
+  if (state.settings.hideVisited && !state.settings.dimOnly) {
+    stories = stories.filter(s => !state.visited.has(s.id));
+  }
+
+  if (stories.length === 0) {
+    storiesEl.innerHTML = `<div class="empty"><h3>No stories</h3><p>Try a different filter or clear your search.</p></div>`;
+    return;
+  }
+
+  // Compute startRank ONCE before building the HTML to avoid TDZ issues
+  const startRank = (state.page - 1) * state.pageSize;
+  const isFollowedStory = (id) => [...state.followed.values()].some(f => f.storyId === id);
+
+  storiesEl.innerHTML = stories.map((s, i) => {
+    const domain = getDomain(s.url);
+    const isVisited = state.visited.has(s.id);
+    const hidden = isVisited && state.settings.hideVisited && !state.settings.dimOnly;
+    if (hidden) return '';
+    const following = isFollowedStory(s.id);
+    return `
+      <div class="story ${isVisited && state.settings.dimOnly ? 'visited' : ''}" data-id="${s.id}" data-index="${i}">
+        <div class="story-rank">${startRank + i + 1}</div>
+        ${renderThumb(s)}
+        <div class="story-body">
+          <a class="story-title" href="${s.url || `https://news.ycombinator.com/item?id=${s.id}`}" target="_blank" rel="noopener" onclick="markVisited(${s.id})">${escapeHtml(s.title || 'Untitled')}</a>
+          ${domain ? `<div class="story-domain"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>${escapeHtml(domain)}</div>` : ''}
+          <div class="story-meta">
+            <span class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>${s.score || 0}</span>
+            <span class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${escapeHtml(s.by || 'unknown')}</span>
+            <span class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${s.time ? timeAgo(s.time) : ''}</span>
+            <span class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${s.descendants || 0} comments</span>
+            <div class="story-actions">
+              <button class="action-btn" onclick="openComments(${s.id}); event.stopPropagation(); event.preventDefault();">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Comments
+              </button>
+              <button class="action-btn ${following ? 'following' : ''}" onclick="toggleFollowStory(${s.id}); event.stopPropagation(); event.preventDefault();">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                ${following ? 'Following' : 'Follow'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  storiesEl.querySelectorAll('.story').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A' || e.target.closest('button') || e.target.closest('a')) return;
+      const id = parseInt(el.dataset.id);
+      const story = state.stories.find(s => s.id === id);
+      if (story && story.url) {
+        window.open(story.url, '_blank');
+        markVisited(id);
+      }
+    });
+  });
+}
+
+function markVisited(id) {
+  state.visited.add(id);
+  saveState();
+  updateCounts();
+  setTimeout(() => {
+    const el = document.querySelector(`.story[data-id="${id}"]`);
+    if (el) el.classList.add('visited');
+  }, 100);
+}
+
+async function openComments(id) {
+  state.currentStory = id;
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <button class="back" onclick="backToFeed()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back to ${state.feed}
+    </button>
+    <div class="loader"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div>`;
+
+  try {
+    const story = await fetchItem(id);
+    state.currentStoryData = story;
+    state.commentSort = 'top';
+    renderComments();
+    markVisited(id);
+  } catch(e) {
+    content.innerHTML = `<div class="empty"><h3>Failed to load</h3><p>${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+function renderComments() {
+  const story = state.currentStoryData;
+  const content = document.getElementById('content');
+  const domain = getDomain(story.url);
+  const isFollowing = [...state.followed.values()].some(f => f.storyId === story.id);
+
+  content.innerHTML = `
+    <button class="back" onclick="backToFeed()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back to ${state.feed}
+    </button>
+    <div class="comment-view">
+      <div class="cv-header">
+        ${renderThumb(story)}
+        <div style="flex:1;min-width:0">
+          <div class="cv-title"><a href="${story.url || `https://news.ycombinator.com/item?id=${story.id}`}" target="_blank" rel="noopener">${escapeHtml(story.title)}</a></div>
+          <div class="story-meta">
+            <span class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>${story.score || 0} pts</span>
+            <span class="meta-item">by <strong>${escapeHtml(story.by)}</strong></span>
+            <span class="meta-item">${timeAgo(story.time)}</span>
+            ${domain ? `<span class="meta-item"><a href="${story.url}" target="_blank" rel="noopener" style="color:var(--link);text-decoration:none">${escapeHtml(domain)} ↗</a></span>` : ''}
+            <button class="action-btn ${isFollowing ? 'following' : ''}" onclick="toggleFollowStory(${story.id})">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              ${isFollowing ? 'Following thread' : 'Follow thread'}
+            </button>
+          </div>
+          ${story.text ? `<div class="cv-body-text">${sanitizeHtml(story.text)}</div>` : ''}
+        </div>
+      </div>
+      <div class="comments-toolbar">
+        <div class="seg">
+          <button class="${state.commentSort === 'top' ? 'active' : ''}" onclick="setCommentSort('top')">Top</button>
+          <button class="${state.commentSort === 'new' ? 'active' : ''}" onclick="setCommentSort('new')">New</button>
+        </div>
+        <span style="font-size:12px;color:var(--text-faint);margin-left:auto">${story.kids ? story.kids.length : 0} comments</span>
+        <button class="action-btn" onclick="expandAll()">Expand all</button>
+        <button class="action-btn" onclick="collapseAll()">Collapse all</button>
+      </div>
+      <div id="comments-tree"></div>
+    </div>`;
+
+  if (!story.kids || story.kids.length === 0) {
+    document.getElementById('comments-tree').innerHTML = '<div class="empty" style="padding:30px"><p>No comments yet.</p></div>';
+    return;
+  }
+
+  let kids = story.kids.slice();
+  if (state.commentSort === 'new') {
+    kids = kids.slice().reverse();
+  }
+  loadComments(kids, document.getElementById('comments-tree'), 0, story.by);
+}
+
+async function loadComments(kids, container, depth, op) {
+  container.innerHTML = '<div class="loader" style="padding:14px"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div>';
+  const BATCH = 15;
+  const firstBatch = kids.slice(0, BATCH);
+  const comments = await fetchItems(firstBatch);
+  container.innerHTML = '';
+  comments.forEach(c => renderComment(c, container, depth, op));
+
+  if (kids.length > BATCH) {
+    const btn = document.createElement('button');
+    btn.className = 'load-more-comments';
+    btn.textContent = `Load ${kids.length - BATCH} more comments…`;
+    btn.onclick = async () => {
+      btn.textContent = 'Loading…';
+      const rest = await fetchItems(kids.slice(BATCH));
+      btn.remove();
+      rest.forEach(c => renderComment(c, container, depth, op));
+    };
+    container.appendChild(btn);
+  }
+}
+
+function renderComment(c, container, depth, op) {
+  if (!c || c.dead || c.deleted) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'comment';
+  wrap.dataset.id = c.id;
+
+  const hasChildren = c.kids && c.kids.length > 0;
+  const childCount = hasChildren ? c.kids.length : 0;
+  const isOp = c.by === op;
+  const isFollowed = state.followed.has(c.id);
+  const safeAuthor = escapeHtml(c.by || 'anon').replace(/'/g, "\\'");
+
+  wrap.innerHTML = `
+    <div class="comment-line" onclick="toggleComment(${c.id})"></div>
+    <div class="comment-head" data-child-count="[+${childCount} collapsed]">
+      <button class="comment-toggle" onclick="toggleComment(${c.id})">[−]</button>
+      <span class="comment-author ${isOp ? 'op' : ''}">${escapeHtml(c.by || 'anon')}</span>
+      ${isOp ? '<span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.05em">OP</span>' : ''}
+      <span>${timeAgo(c.time)}</span>
+      <button class="comment-follow ${isFollowed ? 'active' : ''}" onclick="toggleFollowComment(${c.id}, '${safeAuthor}')">
+        ${isFollowed ? '★ Following' : '☆ Follow'}
+      </button>
+      <a href="https://news.ycombinator.com/item?id=${c.id}" target="_blank" rel="noopener" style="color:var(--text-faint);text-decoration:none;font-size:11px;margin-left:auto">link</a>
+    </div>
+    <div class="comment-body">${sanitizeHtml(c.text || '')}</div>
+    <div class="comment-children"></div>`;
+
+  container.appendChild(wrap);
+
+  if (hasChildren) {
+    const childrenContainer = wrap.querySelector('.comment-children');
+    if (depth < 2) {
+      loadChildComments(c.kids, childrenContainer, depth + 1, op);
+    } else {
+      const btn = document.createElement('button');
+      btn.className = 'load-more-comments';
+      btn.textContent = `Load ${c.kids.length} ${c.kids.length === 1 ? 'reply' : 'replies'}…`;
+      btn.onclick = () => {
+        btn.remove();
+        loadChildComments(c.kids, childrenContainer, depth + 1, op);
+      };
+      childrenContainer.appendChild(btn);
+    }
+  }
+}
+
+async function loadChildComments(kids, container, depth, op) {
+  container.innerHTML = '<div class="loader" style="padding:10px"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div>';
+  const comments = await fetchItems(kids);
+  container.innerHTML = '';
+  comments.forEach(c => renderComment(c, container, depth, op));
+}
+
+function toggleComment(id) {
+  const el = document.querySelector(`.comment[data-id="${id}"]`);
+  if (!el) return;
+  el.classList.toggle('collapsed');
+  const btn = el.querySelector(':scope > .comment-head .comment-toggle');
+  if (btn) btn.textContent = el.classList.contains('collapsed') ? '[+]' : '[−]';
+}
+
+function expandAll() {
+  document.querySelectorAll('.comment.collapsed').forEach(el => {
+    el.classList.remove('collapsed');
+    const btn = el.querySelector(':scope > .comment-head .comment-toggle');
+    if (btn) btn.textContent = '[−]';
+  });
+}
+function collapseAll() {
+  document.querySelectorAll('#comments-tree > .comment').forEach(el => {
+    el.classList.add('collapsed');
+    const btn = el.querySelector(':scope > .comment-head .comment-toggle');
+    if (btn) btn.textContent = '[+]';
+  });
+}
+
+function setCommentSort(sort) {
+  state.commentSort = sort;
+  renderComments();
+}
+
+function toggleFollowStory(storyId) {
+  const story = state.stories.find(s => s.id === storyId) || state.currentStoryData;
+  if (!story) return;
+  const existingFollows = [...state.followed.values()].filter(f => f.storyId === storyId);
+  if (existingFollows.length > 0) {
+    existingFollows.forEach(f => state.followed.delete(f.commentId));
+    toast('Unfollowed thread');
+  } else {
+    state.followed.set(`story-${storyId}`, {
+      commentId: `story-${storyId}`,
+      storyId,
+      storyTitle: story.title,
+      author: story.by,
+      text: story.text || story.title,
+      time: story.time,
+      type: 'story'
+    });
+    toast('Following thread — updates will appear in Following');
+  }
+  saveState();
+  updateCounts();
+  if (state.currentStory === storyId) renderComments();
+  else renderStoryList();
+}
+
+function toggleFollowComment(commentId, author) {
+  if (state.followed.has(commentId)) {
+    state.followed.delete(commentId);
+    toast('Unfollowed comment');
+  } else {
+    const story = state.currentStoryData;
+    state.followed.set(commentId, {
+      commentId,
+      storyId: story.id,
+      storyTitle: story.title,
+      author,
+      time: Date.now() / 1000,
+      type: 'comment'
+    });
+    toast('Following comment');
+  }
+  saveState();
+  updateCounts();
+  renderComments();
+}
+
+function renderFollowedView() {
+  const storiesEl = document.getElementById('stories');
+  const items = [...state.followed.values()].sort((a,b) => (b.time||0) - (a.time||0));
+  document.getElementById('story-count').textContent = `${items.length} followed`;
+
+  if (items.length === 0) {
+    storiesEl.innerHTML = `
+      <div class="empty">
+        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        <h3>Nothing followed yet</h3>
+        <p>Click "Follow" on a story or individual comment to track replies here.</p>
+      </div>`;
+    return;
+  }
+
+  storiesEl.innerHTML = items.map(f => `
+    <div class="story" onclick="openComments(${f.storyId})">
+      <div style="flex:1;min-width:0">
+        <div class="story-title" style="cursor:pointer">${escapeHtml(f.storyTitle)}</div>
+        <div class="story-domain">
+          ${f.type === 'story' ? 'Following whole thread' : `Following comment by ${escapeHtml(f.author || '')}`}
+        </div>
+        <div class="story-meta">
+          <span class="meta-item">${timeAgo(f.time)}</span>
+          <button class="action-btn" onclick="event.stopPropagation();unfollow('${f.commentId}')">Unfollow</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function unfollow(commentId) {
+  state.followed.delete(commentId);
+  saveState();
+  updateCounts();
+  if (state.feed === 'followed') renderFollowedView();
+  toast('Unfollowed');
+}
+
+function renderVisitedView() {
+  const storiesEl = document.getElementById('stories');
+  document.getElementById('story-count').textContent = `${state.visited.size} visited`;
+  storiesEl.innerHTML = '<div class="loader"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div>';
+
+  const ids = [...state.visited].slice(-100).reverse();
+  fetchItems(ids).then(items => {
+    state.stories = items;
+    if (items.length === 0) {
+      storiesEl.innerHTML = `<div class="empty"><h3>No visited stories</h3><p>Stories you click will appear here.</p></div>`;
+      return;
+    }
+    storiesEl.innerHTML = items.map((s, i) => `
+      <div class="story visited" data-id="${s.id}" onclick="openComments(${s.id})">
+        <div class="story-rank">${i+1}</div>
+        ${renderThumb(s)}
+        <div class="story-body">
+          <div class="story-title" style="cursor:pointer">${escapeHtml(s.title)}</div>
+          <div class="story-domain">${escapeHtml(getDomain(s.url) || '')}</div>
+          <div class="story-meta">
+            <span class="meta-item">${s.score || 0} pts</span>
+            <span class="meta-item">${s.descendants || 0} comments</span>
+            <span class="meta-item">${timeAgo(s.time)}</span>
+          </div>
+        </div>
+      </div>`).join('');
+  });
+}
+
+function navigate(feed) {
+  document.getElementById('search-input').value = '';
+  state.search = '';
+  loadFeed(feed);
+  window.scrollTo(0, 0);
+}
+
+function backToFeed() {
+  state.currentStory = null;
+  state.currentStoryData = null;
+  renderFeed();
+}
+
+function renderFeed() {
+  if (state.feed === 'followed') renderFollowedView();
+  else if (state.feed === 'visited') renderVisitedView();
+  else {
+    const content = document.getElementById('content');
+    if (!content.querySelector('#stories')) {
+      loadFeed(state.feed);
+      return;
+    }
+    renderStoryList();
+  }
+}
+
+document.getElementById('search-input').addEventListener('input', (e) => {
+  state.search = e.target.value;
+  if (!state.currentStory) renderStoryList();
+});
+
+document.getElementById('settings-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const menu = document.getElementById('settings-menu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.settings')) {
+    document.getElementById('settings-menu').style.display = 'none';
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (state.currentStory) return;
+  const stories = document.querySelectorAll('.story');
+  if (e.key === 'j') {
+    state.selectedIndex = Math.min(state.selectedIndex + 1, stories.length - 1);
+    updateSelection();
+  } else if (e.key === 'k') {
+    state.selectedIndex = Math.max(state.selectedIndex - 1, 0);
+    updateSelection();
+  } else if (e.key === 'o' || e.key === 'Enter') {
+    if (state.selectedIndex >= 0 && stories[state.selectedIndex]) {
+      const id = parseInt(stories[state.selectedIndex].dataset.id);
+      const story = state.stories.find(s => s.id === id);
+      if (story && story.url) {
+        window.open(story.url, '_blank');
+        markVisited(id);
+      }
+    }
+  } else if (e.key === 'c') {
+    if (state.selectedIndex >= 0 && stories[state.selectedIndex]) {
+      const id = parseInt(stories[state.selectedIndex].dataset.id);
+      openComments(id);
+    }
+  } else if (e.key === '/') {
+    e.preventDefault();
+    document.getElementById('search-input').focus();
+  }
+});
+
+function updateSelection() {
+  document.querySelectorAll('.story').forEach((el, i) => {
+    el.style.outline = i === state.selectedIndex ? '2px solid var(--accent)' : '';
+    el.style.outlineOffset = '2px';
+    if (i === state.selectedIndex) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  });
+}
+
+loadState();
+loadFeed('top');
+</script>
+</body>
+</html>
+

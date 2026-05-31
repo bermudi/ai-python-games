@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM HackerNews Benchmark</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0a0a;
+      color: #e5e5e5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4rem 1rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+      color: #ff6600;
+      margin-bottom: 0.5rem;
+    }
+    p.sub {
+      color: #666;
+      margin-bottom: 3rem;
+      font-size: 0.9rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      max-width: 960px;
+      width: 100%;
+    }
+    a {
+      display: block;
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 2rem;
+      text-decoration: none;
+      color: #e5e5e5;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    a:hover {
+      border-color: #ff6600;
+      transform: translateY(-2px);
+    }
+    a .name {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+    a .type {
+      font-size: 0.8rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>LLM HackerNews Benchmark</h1>
+  <p class="sub">Side-by-side comparison of model outputs</p>
+  <div class="grid">
+    <a href="./qwen3.7-max/">
+      <div class="name">Qwen 3.7 Max</div>
+      <div class="type">HTML</div>
+    </a>
+    <a href="./kimi-k2.6/">
+      <div class="name">Kimi K2.6</div>
+      <div class="type">Vite / React</div>
+    </a>
+    <a href="./glm-5.1/">
+      <div class="name">GLM 5.1</div>
+      <div class="type">Next.js</div>
+    </a>
+    <a href="./deepseek-v4-pro/">
+      <div class="name">DeepSeek V4 Pro</div>
+      <div class="type">HTML</div>
+    </a>
+    <a href="./gemini-3.5-flash/">
+      <div class="name">Gemini 3.5 Flash</div>
+      <div class="type">HTML</div>
+    </a>
+    <a href="./mimo-v2.5-pro/">
+      <div class="name">MiMo V2.5 Pro</div>
+      <div class="type">HTML</div>
+    </a>
+  </div>
+</body>
+</html>

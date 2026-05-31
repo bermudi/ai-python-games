@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hacker News Reader</title>
+    <style>
+        :root {
+            --bg: #fafafa;
+            --surface: #ffffff;
+            --surface-hover: #f0f0f0;
+            --text: #1a1a1a;
+            --text-secondary: #666;
+            --text-muted: #999;
+            --border: #e0e0e0;
+            --accent: #ff6600;
+            --accent-light: #fff3e8;
+            --star: #f5a623;
+            --visited: #8b6b9e;
+            --link: #1a0dab;
+            --comment-bg: #f8f9fa;
+            --comment-border: #e8e8e8;
+            --code-bg: #f4f4f4;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.1);
+            --radius: 8px;
+            --radius-sm: 5px;
+            --transition: 0.2s ease;
+            --tree-line: #d4d4d4;
+            --badge-bg: #eee;
+            --badge-text: #555;
+            --toggle-bg: #e0e0e0;
+            --toggle-active: #ff6600;
+        }
+
+        [data-theme="dark"] {
+            --bg: #1a1a1f;
+            --surface: #232329;
+            --surface-hover: #2a2a32;
+            --text: #e0e0e0;
+            --text-secondary: #aaa;
+            --text-muted: #777;
+            --border: #333;
+            --accent: #ff8c42;
+            --accent-light: #2a2018;
+            --star: #f7b955;
+            --visited: #b39bc8;
+            --link: #8ab4f8;
+            --comment-bg: #1e1e24;
+            --comment-border: #2e2e38;
+            --code-bg: #1a1a20;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --tree-line: #3a3a44;
+            --badge-bg: #333;
+            --badge-text: #ccc;
+            --toggle-bg: #444;
+            --toggle-active: #ff8c42;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        /* HEADER */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+            transition: background var(--transition), border var(--transition);
+        }
+        .header-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 52px;
+            flex-wrap: wrap;
+        }
+        .logo {
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: var(--accent);
+            white-space: nowrap;
+            letter-spacing: -0.5px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .logo span {
+            background: var(--accent);
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-right: 2px;
+            font-size: 0.85rem;
+            vertical-align: 2px;
+        }
+        .nav-tabs {
+            display: flex;
+            gap: 2px;
+            flex-wrap: wrap;
+            flex: 1;
+            min-width: 0;
+        }
+        .nav-tab {
+            padding: 7px 13px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border: none;
+            background: transparent;
+            white-space: nowrap;
+            transition: all var(--transition);
+            position: relative;
+        }
+        .nav-tab:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+        }
+        .nav-tab.active {
+            background: var(--accent-light);
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .nav-tab .count {
+            font-size: 0.7rem;
+            background: var(--badge-bg);
+            color: var(--badge-text);
+            padding: 2px 7px;
+            border-radius: 10px;
+            margin-left: 4px;
+            font-weight: 500;
+        }
+        .header-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .btn-icon {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            transition: all var(--transition);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+        }
+        .btn-icon:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+            border-color: var(--text-muted);
+        }
+        .btn-icon.active-toggle {
+            background: var(--accent-light);
+            color: var(--accent);
+            border-color: var(--accent);
+            font-weight: 600;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--toggle-bg);
+            border-radius: 20px;
+            transition: var(--transition);
+        }
+        .toggle-slider:before {
+            content: "";
+            position: absolute;
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background: #fff;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+        input:checked+.toggle-slider {
+            background: var(--toggle-active);
+        }
+        input:checked+.toggle-slider:before {
+            transform: translateX(16px);
+        }
+
+        /* MAIN LAYOUT */
+        .main-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 16px;
+            display: flex;
+            gap: 16px;
+            min-height: calc(100vh - 52px);
+        }
+        .story-panel {
+            flex: 1;
+            min-width: 0;
+            transition: all var(--transition);
+        }
+        .detail-panel {
+            flex: 1.2;
+            min-width: 0;
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 68px;
+            max-height: calc(100vh - 84px);
+            overflow-y: auto;
+            display: none;
+            transition: all var(--transition);
+        }
+        .detail-panel.open {
+            display: block;
+            animation: slideIn 0.25s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .detail-inner {
+            padding: 20px;
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 14px;
+            background: none;
+            border: none;
+            padding: 6px 0;
+            transition: opacity var(--transition);
+        }
+        .back-btn:hover {
+            opacity: 0.7;
+        }
+
+        /* STORY CARDS */
+        .story-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .story-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            position: relative;
+            box-shadow: var(--shadow);
+        }
+        .story-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 2px 8px rgba(255, 102, 0, 0.1);
+            transform: translateY(-1px);
+        }
+        .story-card.visited {
+            opacity: 0.55;
+        }
+        .story-card.visited .story-title {
+            color: var(--visited);
+        }
+        .story-card.hidden-by-visit {
+            display: none;
+        }
+        .story-thumb {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-sm);
+            object-fit: contain;
+            flex-shrink: 0;
+            background: var(--comment-bg);
+            border: 1px solid var(--border);
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .story-thumb img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 3px;
+        }
+        .story-thumb .fallback-icon {
+            font-size: 1.4rem;
+            color: var(--text-muted);
+        }
+        .story-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .story-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--link);
+            margin-bottom: 3px;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: color var(--transition);
+        }
+        .story-domain {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: inline-block;
+            margin-left: 4px;
+        }
+        .story-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            align-items: center;
+        }
+        .story-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .story-score {
+            font-weight: 600;
+            color: var(--accent);
+        }
+        .story-comments-count {
+            font-weight: 500;
+        }
+        .story-card .followed-dot {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--star);
+            display: none;
+        }
+        .story-card.has-followed-comments .followed-dot {
+            display: block;
+        }
+
+        /* LOADING */
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--text-muted);
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .load-more {
+            text-align: center;
+            padding: 16px;
+        }
+        .load-more button {
+            padding: 10px 28px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text);
+            transition: all var(--transition);
+        }
+        .load-more button:hover {
+            background: var(--surface-hover);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* COMMENTS */
+        .comments-section {
+            margin-top: 16px;
+        }
+        .comments-header {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .comment-tree {
+            list-style: none;
+        }
+        .comment-node {
+            position: relative;
+            padding-left: 20px;
+            margin-left: 0;
+        }
+        .comment-node .comment-node {
+            padding-left: 18px;
+            margin-left: 8px;
+        }
+        .comment-item {
+            background: var(--comment-bg);
+            border: 1px solid var(--comment-border);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            transition: all var(--transition);
+            position: relative;
+        }
+        .comment-item.followed {
+            border-left: 3px solid var(--star);
+            background: var(--accent-light);
+        }
+        .comment-collapse-toggle {
+            position: absolute;
+            left: 2px;
+            top: 12px;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            border-radius: 50%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            z-index: 2;
+            transition: all var(--transition);
+            line-height: 1;
+        }
+        .comment-collapse-toggle:hover {
+            background: var(--accent-light);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+        .comment-collapse-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+        .comment-header {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            font-size: 0.78rem;
+            margin-bottom: 4px;
+            flex-wrap: wrap;
+        }
+        .comment-author {
+            font-weight: 600;
+            color: var(--text);
+        }
+        .comment-time {
+            color: var(--text-muted);
+            font-size: 0.72rem;
+        }
+        .comment-follow-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 2px 5px;
+            border-radius: 3px;
+            color: var(--text-muted);
+            transition: all var(--transition);
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+        .comment-follow-btn:hover {
+            color: var(--star);
+            background: var(--surface-hover);
+        }
+        .comment-follow-btn.followed {
+            color: var(--star);
+        }
+        .comment-text {
+            font-size: 0.88rem;
+            line-height: 1.5;
+            color: var(--text);
+            word-break: break-word;
+        }
+        .comment-text p {
+            margin: 6px 0;
+        }
+        .comment-text pre {
+            background: var(--code-bg);
+            padding: 8px 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.8rem;
+            margin: 6px 0;
+        }
+        .comment-text a {
+            color: var(--link);
+        }
+        .comment-text i {
+            color: var(--text-secondary);
+        }
+        .comment-children {
+            margin-top: 2px;
+        }
+        .comment-children.collapsed {
+            display: none;
+        }
+        .collapsed-summary {
+            display: none;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: var(--surface-hover);
+            margin-top: 4px;
+        }
+        .comment-children.collapsed+.collapsed-summary {
+            display: inline-block;
+        }
+        .deleted-comment {
+            color: var(--text-muted);
+            font-style: italic;
+            font-size: 0.8rem;
+        }
+        .reply-count-badge {
+            font-size: 0.7rem;
+            background: var(--badge-bg);
+            color: var(--badge-text);
+            padding: 2px 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-left: 4px;
+            transition: all var(--transition);
+        }
+        .reply-count-badge:hover {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        /* FOLLOWED PANEL */
+        .followed-panel {
+            display: none;
+            flex: 1.2;
+            min-width: 0;
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 68px;
+            max-height: calc(100vh - 84px);
+            overflow-y: auto;
+        }
+        .followed-panel.open {
+            display: block;
+            animation: slideIn 0.25s ease;
+        }
+        .followed-inner {
+            padding: 20px;
+        }
+        .followed-comment-card {
+            background: var(--comment-bg);
+            border: 1px solid var(--comment-border);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--star);
+            transition: all var(--transition);
+        }
+        .followed-comment-card:hover {
+            box-shadow: var(--shadow);
+        }
+        .followed-comment-meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .followed-comment-text {
+            font-size: 0.85rem;
+            color: var(--text);
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+        .followed-comment-story {
+            font-size: 0.75rem;
+            color: var(--link);
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .unfollow-btn {
+            font-size: 0.7rem;
+            cursor: pointer;
+            background: none;
+            border: 1px solid var(--border);
+            padding: 3px 10px;
+            border-radius: 12px;
+            color: var(--text-secondary);
+            transition: all var(--transition);
+        }
+        .unfollow-btn:hover {
+            border-color: #e74c3c;
+            color: #e74c3c;
+            background: #fef0f0;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .empty-state .icon {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            z-index: 999;
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 1.7s forwards;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes toastOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+                padding: 8px;
+                gap: 8px;
+            }
+            .detail-panel,
+            .followed-panel {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 200;
+                max-height: 100vh;
+                border-radius: 0;
+                overflow-y: auto;
+            }
+            .detail-panel.open,
+            .followed-panel.open {
+                display: block;
+            }
+            .story-card {
+                padding: 10px;
+                gap: 8px;
+            }
+            .story-thumb {
+                width: 38px;
+                height: 38px;
+            }
+            .story-title {
+                font-size: 0.85rem;
+            }
+            .header-inner {
+                gap: 4px;
+                height: auto;
+                padding: 8px 0;
+            }
+            .nav-tab {
+                padding: 5px 9px;
+                font-size: 0.75rem;
+            }
+            .header-actions {
+                gap: 3px;
+            }
+            .btn-icon {
+                padding: 5px 8px;
+                font-size: 0.7rem;
+            }
+            .comment-node {
+                padding-left: 14px;
+            }
+            .comment-node .comment-node {
+                padding-left: 12px;
+                margin-left: 4px;
+            }
+        }
+        @media (max-width: 480px) {
+            .story-meta {
+                gap: 4px;
+                font-size: 0.7rem;
+            }
+            .nav-tabs {
+                gap: 0;
+            }
+            .nav-tab {
+                padding: 5px 7px;
+                font-size: 0.7rem;
+                border-radius: 14px;
+            }
+            .logo {
+                font-size: 1rem;
+            }
+            .story-thumb {
+                width: 30px;
+                height: 30px;
+                padding: 2px;
+            }
+            .story-card {
+                padding: 8px;
+                gap: 6px;
+            }
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo" onclick="goHome()" title="Hacker News Reader"><span>HN</span> Reader</div>
+            <nav class="nav-tabs" id="navTabs">
+                <button class="nav-tab active" data-cat="top">Top</button>
+                <button class="nav-tab" data-cat="new">New</button>
+                <button class="nav-tab" data-cat="best">Best</button>
+                <button class="nav-tab" data-cat="ask">Ask</button>
+                <button class="nav-tab" data-cat="show">Show</button>
+                <button class="nav-tab" data-cat="jobs">Jobs</button>
+            </nav>
+            <div class="header-actions">
+                <button class="btn-icon" id="btnFollowed" onclick="toggleFollowedPanel()" title="Followed Comments">
+                    ⭐ Followed <span id="followedCount">0</span>
+                </button>
+                <button class="btn-icon" id="btnHideVisited" onclick="toggleHideVisited()" title="Hide visited stories">
+                    🙈 Hide Visited
+                </button>
+                <label class="toggle-switch" title="Dark mode">
+                    <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN -->
+    <div class="main-container">
+        <!-- Story List Panel -->
+        <div class="story-panel" id="storyPanel">
+            <div class="story-list" id="storyList"></div>
+            <div class="loading-spinner" id="loadingSpinner" style="display:none;">
+                <div class="spinner"></div> Loading stories...
+            </div>
+            <div class="load-more" id="loadMoreContainer" style="display:none;">
+                <button onclick="loadMore()">Load More Stories</button>
+            </div>
+        </div>
+
+        <!-- Story Detail Panel -->
+        <div class="detail-panel" id="detailPanel">
+            <div class="detail-inner" id="detailInner"></div>
+        </div>
+
+        <!-- Followed Comments Panel -->
+        <div class="followed-panel" id="followedPanel">
+            <div class="followed-inner" id="followedInner"></div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <script>
+        (function() {
+            // ──────────────────────────────────────
+            // CONFIGURATION
+            // ──────────────────────────────────────
+            const API_BASE = 'https://hacker-news.firebaseio.com/v0';
+            const STORIES_PER_PAGE = 30;
+            const MAX_TOP_COMMENTS = 50;
+
+            // ──────────────────────────────────────
+            // DOM REFS
+            // ──────────────────────────────────────
+            const $storyList = document.getElementById('storyList');
+            const $detailPanel = document.getElementById('detailPanel');
+            const $detailInner = document.getElementById('detailInner');
+            const $followedPanel = document.getElementById('followedPanel');
+            const $followedInner = document.getElementById('followedInner');
+            const $loadingSpinner = document.getElementById('loadingSpinner');
+            const $loadMoreContainer = document.getElementById('loadMoreContainer');
+            const $navTabs = document.getElementById('navTabs');
+            const $btnFollowed = document.getElementById('btnFollowed');
+            const $btnHideVisited = document.getElementById('btnHideVisited');
+            const $followedCount = document.getElementById('followedCount');
+            const $themeToggle = document.getElementById('themeToggle');
+            const $toastContainer = document.getElementById('toastContainer');
+
+            // ──────────────────────────────────────
+            // STATE
+            // ──────────────────────────────────────
+            let currentCategory = 'top';
+            let allStoryIds = [];
+            let displayedStoryIds = [];
+            let storiesCache = {}; // id -> story object
+            let currentDetailStoryId = null;
+            let followedComments = {}; // id -> { id, text, by, time, storyId, storyTitle, followedAt }
+            let visitedStoryIds = new Set();
+            let hideVisited = false;
+            let collapsedComments = {}; // commentId -> true if collapsed
+            let isDarkTheme = false;
+            let detailPanelOpen = false;
+            let followedPanelOpen = false;
+            let isLoadingMore = false;
+
+            // ──────────────────────────────────────
+            // LOCAL STORAGE
+            // ──────────────────────────────────────
+            function loadFromStorage() {
+                try {
+                    const fc = localStorage.getItem('hn_followed_comments');
+                    if (fc) followedComments = JSON.parse(fc);
+                    const vs = localStorage.getItem('hn_visited_stories');
+                    if (vs) visitedStoryIds = new Set(JSON.parse(vs));
+                    const hv = localStorage.getItem('hn_hide_visited');
+                    hideVisited = hv === 'true';
+                    const theme = localStorage.getItem('hn_theme');
+                    isDarkTheme = theme === 'dark';
+                } catch (e) { /* ignore */ }
+            }
+
+            function saveFollowedComments() {
+                try {
+                    localStorage.setItem('hn_followed_comments', JSON.stringify(followedComments));
+                } catch (e) { /* ignore */ }
+            }
+
+            function saveVisitedStories() {
+                try {
+                    localStorage.setItem('hn_visited_stories', JSON.stringify([...visitedStoryIds]));
+                } catch (e) { /* ignore */ }
+            }
+
+            function saveHideVisited() {
+                try {
+                    localStorage.setItem('hn_hide_visited', hideVisited ? 'true' : 'false');
+                } catch (e) { /* ignore */ }
+            }
+
+            function saveTheme() {
+                try {
+                    localStorage.setItem('hn_theme', isDarkTheme ? 'dark' : 'light');
+                } catch (e) { /* ignore */ }
+            }
+
+            // ──────────────────────────────────────
+            // API HELPERS
+            // ──────────────────────────────────────
+            async function fetchJson(url) {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            }
+
+            async function fetchStoryIds(category) {
+                const map = {
+                    top: 'topstories',
+                    new: 'newstories',
+                    best: 'beststories',
+                    ask: 'askstories',
+                    show: 'showstories',
+                    jobs: 'jobstories'
+                };
+                const endpoint = map[category] || 'topstories';
+                return fetchJson(`${API_BASE}/${endpoint}.json`);
+            }
+
+            async function fetchItem(id) {
+                if (storiesCache[id]) return storiesCache[id];
+                const item = await fetchJson(`${API_BASE}/item/${id}.json`);
+                if (item && item.type === 'story') {
+                    storiesCache[id] = item;
+                }
+                return item;
+            }
+
+            async function fetchItems(ids) {
+                const results = await Promise.allSettled(ids.map(id => fetchItem(id)));
+                return results
+                    .filter(r => r.status === 'fulfilled' && r.value)
+                    .map(r => r.value)
+                    .filter(item => item.type === 'story' || item.type === 'job');
+            }
+
+            // ──────────────────────────────────────
+            // THUMBNAIL HELPERS
+            // ──────────────────────────────────────
+            function getDomain(url) {
+                try {
+                    const u = new URL(url);
+                    return u.hostname.replace(/^www\./, '');
+                } catch {
+                    return null;
+                }
+            }
+
+            function getThumbnailUrl(story) {
+                if (!story.url) return null;
+                const domain = getDomain(story.url);
+                if (!domain) return null;
+                return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+            }
+
+            function getFallbackInitial(story) {
+                if (story.title) {
+                    const firstChar = story.title.trim()[0];
+                    if (/[A-Za-z0-9]/.test(firstChar)) return firstChar.toUpperCase();
+                }
+                return '?';
+            }
+
+            // ──────────────────────────────────────
+            // TIME FORMATTING
+            // ──────────────────────────────────────
+            function timeAgo(unixTime) {
+                const now = Date.now();
+                const diff = now - unixTime * 1000;
+                const mins = Math.floor(diff / 60000);
+                const hrs = Math.floor(diff / 3600000);
+                const days = Math.floor(diff / 86400000);
+                if (mins < 1) return 'just now';
+                if (mins < 60) return `${mins}m ago`;
+                if (hrs < 24) return `${hrs}h ago`;
+                if (days < 30) return `${days}d ago`;
+                const date = new Date(unixTime * 1000);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }
+
+            // ──────────────────────────────────────
+            // TOAST
+            // ──────────────────────────────────────
+            function showToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = message;
+                $toastContainer.appendChild(toast);
+                setTimeout(() => toast.remove(), 2000);
+            }
+
+            // ──────────────────────────────────────
+            // THEME
+            // ──────────────────────────────────────
+            function applyTheme() {
+                document.body.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
+                $themeToggle.checked = isDarkTheme;
+            }
+
+            function toggleTheme() {
+                isDarkTheme = !isDarkTheme;
+                applyTheme();
+                saveTheme();
+            }
+
+            // ──────────────────────────────────────
+            // VISITED / HIDE VISITED
+            // ──────────────────────────────────────
+            function markVisited(storyId) {
+                visitedStoryIds.add(storyId);
+                saveVisitedStories();
+                refreshStoryListVisibility();
+            }
+
+            function toggleHideVisited() {
+                hideVisited = !hideVisited;
+                saveHideVisited();
+                updateHideVisitedButton();
+                refreshStoryListVisibility();
+                if (hideVisited) {
+                    showToast('Visited stories hidden');
+                } else {
+                    showToast('Showing all stories');
+                }
+            }
+
+            function updateHideVisitedButton() {
+                if (hideVisited) {
+                    $btnHideVisited.classList.add('active-toggle');
+                    $btnHideVisited.textContent = '🙈 Hiding Visited';
+                } else {
+                    $btnHideVisited.classList.remove('active-toggle');
+                    $btnHideVisited.textContent = '🙈 Hide Visited';
+                }
+            }
+
+            function refreshStoryListVisibility() {
+                const cards = $storyList.querySelectorAll('.story-card');
+                cards.forEach(card => {
+                    const storyId = parseInt(card.dataset.storyId);
+                    if (hideVisited && visitedStoryIds.has(storyId)) {
+                        card.classList.add('hidden-by-visit');
+                    } else {
+                        card.classList.remove('hidden-by-visit');
+                    }
+                    if (visitedStoryIds.has(storyId)) {
+                        card.classList.add('visited');
+                    } else {
+                        card.classList.remove('visited');
+                    }
+                });
+                // Update followed dots
+                updateFollowedDots();
+            }
+
+            function updateFollowedDots() {
+                const cards = $storyList.querySelectorAll('.story-card');
+                cards.forEach(card => {
+                    const storyId = parseInt(card.dataset.storyId);
+                    const hasFollowed = Object.values(followedComments).some(fc => fc.storyId ===
+                        storyId);
+                    if (hasFollowed) {
+                        card.classList.add('has-followed-comments');
+                    } else {
+                        card.classList.remove('has-followed-comments');
+                    }
+                });
+            }
+
+            // ──────────────────────────────────────
+            // FOLLOW COMMENTS
+            // ──────────────────────────────────────
+            function toggleFollowComment(commentData) {
+                const id = commentData.id;
+                if (followedComments[id]) {
+                    delete followedComments[id];
+                    saveFollowedComments();
+                    updateFollowedCount();
+                    updateFollowedDots();
+                    showToast('Comment unfollowed');
+                    return false;
+                } else {
+                    followedComments[id] = {
+                        id: id,
+                        text: commentData.text || '',
+                        by: commentData.by || 'unknown',
+                        time: commentData.time || Math.floor(Date.now() / 1000),
+                        storyId: commentData.storyId || currentDetailStoryId,
+                        storyTitle: commentData.storyTitle || '',
+                        followedAt: Date.now()
+                    };
+                    saveFollowedComments();
+                    updateFollowedCount();
+                    updateFollowedDots();
+                    showToast('⭐ Comment followed!');
+                    return true;
+                }
+            }
+
+            function isCommentFollowed(commentId) {
+                return !!followedComments[commentId];
+            }
+
+            function updateFollowedCount() {
+                const count = Object.keys(followedComments).length;
+                $followedCount.textContent = count;
+            }
+
+            // ──────────────────────────────────────
+            // RENDER STORY LIST
+            // ──────────────────────────────────────
+            function renderStoryCard(story) {
+                const thumbnailUrl = getThumbnailUrl(story);
+                const domain = story.url ? getDomain(story.url) : '';
+                const isVisited = visitedStoryIds.has(story.id);
+                const card = document.createElement('div');
+                card.className = 'story-card' + (isVisited ? ' visited' : '');
+                if (hideVisited && isVisited) {
+                    card.classList.add('hidden-by-visit');
+                }
+                card.dataset.storyId = story.id;
+                card.onclick = (e) => {
+                    // Don't trigger if clicking on external link elements
+                    if (e.target.closest('a') && e.target.closest('a').href) return;
+                    openStoryDetail(story.id);
+                };
+
+                // Thumbnail
+                const thumbDiv = document.createElement('div');
+                thumbDiv.className = 'story-thumb';
+                if (thumbnailUrl) {
+                    const img = document.createElement('img');
+                    img.src = thumbnailUrl;
+                    img.alt = '';
+                    img.loading = 'lazy';
+                    img.onerror = () => {
+                        thumbDiv.innerHTML =
+                            `<span class="fallback-icon">${getFallbackInitial(story)}</span>`;
+                    };
+                    thumbDiv.appendChild(img);
+                } else {
+                    thumbDiv.innerHTML = `<span class="fallback-icon">${getFallbackInitial(story)}</span>`;
+                }
+                card.appendChild(thumbDiv);
+
+                // Content
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'story-content';
+
+                const titleEl = document.createElement('div');
+                titleEl.className = 'story-title';
+                titleEl.textContent = story.title;
+                if (story.url) {
+                    titleEl.style.cursor = 'pointer';
+                    titleEl.onclick = (e) => {
+                        e.stopPropagation();
+                        window.open(story.url, '_blank', 'noopener');
+                        markVisited(story.id);
+                    };
+                }
+                contentDiv.appendChild(titleEl);
+
+                if (domain && story.url) {
+                    const domainEl = document.createElement('span');
+                    domainEl.className = 'story-domain';
+                    domainEl.textContent = domain;
+                    domainEl.style.cursor = 'pointer';
+                    domainEl.onclick = (e) => {
+                        e.stopPropagation();
+                        window.open(story.url, '_blank', 'noopener');
+                        markVisited(story.id);
+                    };
+                    contentDiv.appendChild(domainEl);
+                }
+
+                const metaDiv = document.createElement('div');
+                metaDiv.className = 'story-meta';
+                metaDiv.innerHTML = `
+                    <span class="story-score">▲ ${story.score || 0}</span>
+                    <span>by ${escapeHtml(story.by || 'unknown')}</span>
+                    <span>${timeAgo(story.time)}</span>
+                    <span class="story-comments-count">💬 ${story.descendants || 0} comments</span>
+                `;
+                contentDiv.appendChild(metaDiv);
+
+                card.appendChild(contentDiv);
+
+                // Followed dot indicator
+                const dot = document.createElement('div');
+                dot.className = 'followed-dot';
+                dot.title = 'Has followed comments';
+                card.appendChild(dot);
+
+                return card;
+            }
+
+            function renderStoryList(stories) {
+                $storyList.innerHTML = '';
+                stories.forEach(story => {
+                    $storyList.appendChild(renderStoryCard(story));
+                });
+                refreshStoryListVisibility();
+            }
+
+            function escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            // ──────────────────────────────────────
+            // RENDER COMMENTS
+            // ──────────────────────────────────────
+            function renderCommentTree(comments, storyId, storyTitle, depth = 0) {
+                const ul = document.createElement('ul');
+                ul.className = 'comment-tree';
+
+                comments.forEach(comment => {
+                    if (!comment || comment.deleted) {
+                        const li = document.createElement('li');
+                        li.className = 'comment-node';
+                        const item = document.createElement('div');
+                        item.className = 'comment-item';
+                        item.innerHTML = '<span class="deleted-comment">[deleted]</span>';
+                        li.appendChild(item);
+                        ul.appendChild(li);
+                        return;
+                    }
+                    if (comment.dead && !comment.text) {
+                        const li = document.createElement('li');
+                        li.className = 'comment-node';
+                        const item = document.createElement('div');
+                        item.className = 'comment-item';
+                        item.innerHTML = '<span class="deleted-comment">[flagged/dead]</span>';
+                        li.appendChild(item);
+                        ul.appendChild(li);
+                        return;
+                    }
+
+                    const li = document.createElement('li');
+                    li.className = 'comment-node';
+                    const item = document.createElement('div');
+                    item.className = 'comment-item';
+                    if (isCommentFollowed(comment.id)) {
+                        item.classList.add('followed');
+                    }
+
+                    const hasChildren = comment.kids && comment.kids.length > 0;
+                    const isCollapsed = collapsedComments[comment.id] || false;
+
+                    // Collapse toggle
+                    if (hasChildren) {
+                        const toggleBtn = document.createElement('span');
+                        toggleBtn.className = 'comment-collapse-toggle' + (isCollapsed ? ' collapsed' : '');
+                        toggleBtn.textContent = '▼';
+                        toggleBtn.title = isCollapsed ? 'Expand replies' : 'Collapse replies';
+                        toggleBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            toggleCommentCollapse(comment.id, li);
+                        };
+                        item.appendChild(toggleBtn);
+                    }
+
+                    // Header
+                    const header = document.createElement('div');
+                    header.className = 'comment-header';
+                    header.innerHTML = `
+                        <span class="comment-author">${escapeHtml(comment.by || 'unknown')}</span>
+                        <span class="comment-time">${timeAgo(comment.time)}</span>
+                        ${hasChildren ? `<span class="reply-count-badge" data-comment-id="${comment.id}">${comment.kids.length} replies</span>` : ''}
+                    `;
+
+                    // Follow button
+                    const followBtn = document.createElement('button');
+                    followBtn.className = 'comment-follow-btn' + (isCommentFollowed(comment.id) ? ' followed' :
+                        '');
+                    followBtn.textContent = isCommentFollowed(comment.id) ? '★' : '☆';
+                    followBtn.title = isCommentFollowed(comment.id) ? 'Unfollow this comment' :
+                        'Follow this comment';
+                    followBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        const nowFollowed = toggleFollowComment({
+                            id: comment.id,
+                            text: stripHtml(comment.text || ''),
+                            by: comment.by,
+                            time: comment.time,
+                            storyId: storyId,
+                            storyTitle: storyTitle
+                        });
+                        followBtn.textContent = nowFollowed ? '★' : '☆';
+                        followBtn.className = 'comment-follow-btn' + (nowFollowed ? ' followed' : '');
+                        if (nowFollowed) {
+                            item.classList.add('followed');
+                        } else {
+                            item.classList.remove('followed');
+                        }
+                    };
+                    header.appendChild(followBtn);
+                    item.appendChild(header);
+
+                    // Text
+                    const textDiv = document.createElement('div');
+                    textDiv.className = 'comment-text';
+                    textDiv.innerHTML = sanitizeCommentHtml(comment.text || '');
+                    item.appendChild(textDiv);
+
+                    // Children container
+                    let childrenContainer = null;
+                    let summaryEl = null;
+                    if (hasChildren) {
+                        childrenContainer = document.createElement('div');
+                        childrenContainer.className = 'comment-children';
+                        if (isCollapsed) {
+                            childrenContainer.classList.add('collapsed');
+                        }
+                        childrenContainer.dataset.commentId = comment.id;
+                        childrenContainer.dataset.loaded = 'false';
+                        item.appendChild(childrenContainer);
+
+                        summaryEl = document.createElement('div');
+                        summaryEl.className = 'collapsed-summary';
+                        summaryEl.textContent = `[${comment.kids.length} replies hidden]`;
+                        summaryEl.onclick = (e) => {
+                            e.stopPropagation();
+                            toggleCommentCollapse(comment.id, li);
+                        };
+                        if (!isCollapsed) summaryEl.style.display = 'none';
+                        item.appendChild(summaryEl);
+
+                        // Click on reply badge to toggle
+                        const badge = header.querySelector('.reply-count-badge');
+                        if (badge) {
+                            badge.onclick = (e) => {
+                                e.stopPropagation();
+                                if (isCollapsed) {
+                                    toggleCommentCollapse(comment.id, li);
+                                } else if (childrenContainer.dataset.loaded === 'true') {
+                                    toggleCommentCollapse(comment.id, li);
+                                }
+                            };
+                        }
+
+                        // Lazy load children when first expanded
+                        if (!isCollapsed) {
+                            loadCommentChildren(comment.id, comment.kids, childrenContainer, storyId,
+                                storyTitle, depth + 1);
+                        }
+                    }
+
+                    li.appendChild(item);
+                    ul.appendChild(li);
+                });
+
+                return ul;
+            }
+
+            async function loadCommentChildren(commentId, kidIds, container, storyId, storyTitle, depth) {
+                if (container.dataset.loaded === 'true') return;
+                if (depth > 8) {
+                    container.innerHTML =
+                        '<div style="font-size:0.75rem;color:var(--text-muted);padding:8px;">(thread too deep)</div>';
+                    container.dataset.loaded = 'true';
+                    return;
+                }
+                container.innerHTML =
+                    '<div style="padding:8px;font-size:0.75rem;color:var(--text-muted);">Loading replies...</div>';
+                const kids = await fetchItems(kidIds.slice(0, 30));
+                container.innerHTML = '';
+                const tree = renderCommentTree(kids, storyId, storyTitle, depth);
+                container.appendChild(tree);
+                container.dataset.loaded = 'true';
+            }
+
+            function toggleCommentCollapse(commentId, liElement) {
+                const childrenContainer = liElement.querySelector('.comment-children');
+                const summaryEl = liElement.querySelector('.collapsed-summary');
+                const toggleBtn = liElement.querySelector('.comment-collapse-toggle');
+
+                if (!childrenContainer) return;
+
+                const isCollapsed = childrenContainer.classList.contains('collapsed');
+
+                if (isCollapsed) {
+                    // Expand
+                    childrenContainer.classList.remove('collapsed');
+                    if (summaryEl) summaryEl.style.display = 'none';
+                    if (toggleBtn) toggleBtn.classList.remove('collapsed');
+                    collapsedComments[commentId] = false;
+                    // Load children if not loaded
+                    if (childrenContainer.dataset.loaded === 'false') {
+                        const kidIds = JSON.parse(childrenContainer.dataset.kidIds || '[]');
+                        if (kidIds.length === 0) {
+                            // Need to fetch the comment to get kids
+                            fetchItem(commentId).then(comment => {
+                                if (comment && comment.kids) {
+                                    childrenContainer.dataset.kidIds = JSON.stringify(comment.kids);
+                                    loadCommentChildren(commentId, comment.kids, childrenContainer,
+                                        currentDetailStoryId,
+                                        storiesCache[currentDetailStoryId]?.title || '',
+                                        1);
+                                }
+                            });
+                        } else {
+                            loadCommentChildren(commentId, kidIds, childrenContainer, currentDetailStoryId,
+                                storiesCache[currentDetailStoryId]?.title || '', 1);
+                        }
+                    }
+                } else {
+                    // Collapse
+                    childrenContainer.classList.add('collapsed');
+                    if (summaryEl) {
+                        summaryEl.style.display = 'inline-block';
+                        const kidsCount = childrenContainer.dataset.kidIds ?
+                            JSON.parse(childrenContainer.dataset.kidIds).length :
+                            (childrenContainer.querySelectorAll('.comment-node').length || '?');
+                        summaryEl.textContent = `[${kidsCount} replies hidden]`;
+                    }
+                    if (toggleBtn) toggleBtn.classList.add('collapsed');
+                    collapsedComments[commentId] = true;
+                }
+            }
+
+            function sanitizeCommentHtml(html) {
+                // Allow basic formatting tags, strip scripts and events
+                if (!html) return '';
+                let cleaned = html
+                    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+                    .replace(/ on\w+="[^"]*"/gi, '')
+                    .replace(/ on\w+='[^']*'/gi, '')
+                    .replace(/ on\w+=\w+/gi, '');
+                return cleaned;
+            }
+
+            function stripHtml(html) {
+                if (!html) return '';
+                const div = document.createElement('div');
+                div.innerHTML = html;
+                return div.textContent.substring(0, 200);
+            }
+
+            // ──────────────────────────────────────
+            // STORY DETAIL PANEL
+            // ──────────────────────────────────────
+            async function openStoryDetail(storyId) {
+                currentDetailStoryId = storyId;
+                markVisited(storyId);
+                detailPanelOpen = true;
+                $detailPanel.classList.add('open');
+                $detailInner.innerHTML =
+                    '<div class="loading-spinner"><div class="spinner"></div> Loading story & comments...</div>';
+
+                // Close followed panel if open
+                if (followedPanelOpen) {
+                    closeFollowedPanel();
+                }
+
+                try {
+                    const story = await fetchItem(storyId);
+                    if (!story) throw new Error('Story not found');
+                    storiesCache[storyId] = story;
+
+                    const thumbnailUrl = getThumbnailUrl(story);
+                    const domain = story.url ? getDomain(story.url) : '';
+
+                    let detailHtml = `
+                        <button class="back-btn" onclick="closeDetailPanel()">← Back to stories</button>
+                        <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:16px;">
+                            ${thumbnailUrl ? `<div class="story-thumb" style="width:56px;height:56px;"><img src="${thumbnailUrl}" alt="" onerror="this.parentElement.innerHTML='<span class=fallback-icon>${getFallbackInitial(story)}</span>'"></div>` : ''}
+                            <div style="flex:1;min-width:0;">
+                                <h2 style="font-size:1.1rem;margin-bottom:4px;line-height:1.3;color:var(--text);">${escapeHtml(story.title)}</h2>
+                                ${domain ? `<a href="${story.url}" target="_blank" rel="noopener" style="color:var(--link);font-size:0.8rem;">${domain} ↗</a>` : ''}
+                                <div class="story-meta" style="margin-top:6px;">
+                                    <span class="story-score">▲ ${story.score || 0}</span>
+                                    <span>by ${escapeHtml(story.by || 'unknown')}</span>
+                                    <span>${timeAgo(story.time)}</span>
+                                    <span>💬 ${story.descendants || 0} comments</span>
+                                </div>
+                                ${story.text ? `<div style="margin-top:10px;font-size:0.9rem;color:var(--text-secondary);line-height:1.5;">${sanitizeCommentHtml(story.text)}</div>` : ''}
+                            </div>
+                        </div>
+                        <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">
+                    `;
+
+                    $detailInner.innerHTML = detailHtml;
+
+                    // Comments section
+                    const commentsSection = document.createElement('div');
+                    commentsSection.className = 'comments-section';
+                    commentsSection.innerHTML =
+                        '<div class="comments-header">💬 Comments</div>';
+
+                    if (story.kids && story.kids.length > 0) {
+                        const topCommentIds = story.kids.slice(0, MAX_TOP_COMMENTS);
+                        const commentContainer = document.createElement('div');
+                        commentContainer.innerHTML =
+                            '<div style="padding:12px;font-size:0.8rem;color:var(--text-muted);">Loading comments...</div>';
+                        commentsSection.appendChild(commentContainer);
+
+                        // Fetch top-level comments
+                        const topComments = await fetchItems(topCommentIds);
+                        commentContainer.innerHTML = '';
+                        const tree = renderCommentTree(topComments, storyId, story.title, 0);
+                        commentContainer.appendChild(tree);
+
+                        // Pre-store kid IDs for collapse/expand
+                        topComments.forEach((c, i) => {
+                            if (c && c.kids) {
+                                const childrenContainers = commentContainer.querySelectorAll(
+                                    '.comment-children');
+                                childrenContainers.forEach(cc => {
+                                    if (cc.dataset.commentId == c.id) {
+                                        cc.dataset.kidIds = JSON.stringify(c.kids);
+                                    }
+                                });
+                            }
+                        });
+
+                        if (story.kids.length > MAX_TOP_COMMENTS) {
+                            const moreNote = document.createElement('div');
+                            moreNote.style.cssText =
+                                'padding:10px;font-size:0.8rem;color:var(--text-muted);text-align:center;';
+                            moreNote.textContent =
+                                `Showing top ${MAX_TOP_COMMENTS} of ${story.kids.length} comments`;
+                            commentContainer.appendChild(moreNote);
+                        }
+
+                        commentsSection.appendChild(commentContainer);
+                    } else {
+                        commentsSection.innerHTML +=
+                            '<div style="padding:20px;text-align:center;color:var(--text-muted);">No comments yet.</div>';
+                    }
+
+                    $detailInner.appendChild(commentsSection);
+
+                    // Scroll detail panel to top
+                    $detailPanel.scrollTop = 0;
+
+                } catch (err) {
+                    $detailInner.innerHTML = `
+                        <button class="back-btn" onclick="closeDetailPanel()">← Back to stories</button>
+                        <div class="empty-state"><span class="icon">😕</span>Failed to load story details.<br><small>${escapeHtml(err.message)}</small></div>
+                    `;
+                }
+            }
+
+            function closeDetailPanel() {
+                detailPanelOpen = false;
+                $detailPanel.classList.remove('open');
+                currentDetailStoryId = null;
+                $detailInner.innerHTML = '';
+            }
+
+            // ──────────────────────────────────────
+            // FOLLOWED PANEL
+            // ──────────────────────────────────────
+            function toggleFollowedPanel() {
+                if (followedPanelOpen) {
+                    closeFollowedPanel();
+                } else {
+                    openFollowedPanel();
+                }
+            }
+
+            function openFollowedPanel() {
+                followedPanelOpen = true;
+                $followedPanel.classList.add('open');
+                if (detailPanelOpen) closeDetailPanel();
+                renderFollowedPanel();
+                $btnFollowed.classList.add('active-toggle');
+            }
+
+            function closeFollowedPanel() {
+                followedPanelOpen = false;
+                $followedPanel.classList.remove('open');
+                $btnFollowed.classList.remove('active-toggle');
+            }
+
+            function renderFollowedPanel() {
+                const entries = Object.values(followedComments).sort((a, b) => b.followedAt - a.followedAt);
+                if (entries.length === 0) {
+                    $followedInner.innerHTML = `
+                        <button class="back-btn" onclick="closeFollowedPanel()">← Back to stories</button>
+                        <div class="empty-state"><span class="icon">⭐</span>No followed comments yet.<br><small>Click the ☆ icon on any comment to follow it.</small></div>
+                    `;
+                } else {
+                    let html = `<button class="back-btn" onclick="closeFollowedPanel()">← Back to stories</button>
+                    <h3 style="margin-bottom:14px;font-size:1rem;">⭐ Followed Comments (${entries.length})</h3>`;
+                    entries.forEach(fc => {
+                        html += `
+                            <div class="followed-comment-card">
+                                <div class="followed-comment-meta">
+                                    <strong>${escapeHtml(fc.by || 'unknown')}</strong>
+                                    <span>${timeAgo(fc.time)}</span>
+                                    <span>Followed ${new Date(fc.followedAt).toLocaleDateString()}</span>
+                                </div>
+                                <div class="followed-comment-text">${escapeHtml(fc.text.substring(0, 300))}${fc.text.length > 300 ? '...' : ''}</div>
+                                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                                    <span class="followed-comment-story" onclick="openStoryDetail(${fc.storyId});closeFollowedPanel();">📖 ${escapeHtml(fc.storyTitle || 'View story')}</span>
+                                    <button class="unfollow-btn" onclick="unfollowComment(${fc.id})">Unfollow</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    $followedInner.innerHTML = html;
+                }
+                $followedPanel.scrollTop = 0;
+            }
+
+            function unfollowComment(commentId) {
+                delete followedComments[commentId];
+                saveFollowedComments();
+                updateFollowedCount();
+                updateFollowedDots();
+                renderFollowedPanel();
+                showToast('Comment unfollowed');
+            }
+
+            // ──────────────────────────────────────
+            // LOAD STORIES
+            // ──────────────────────────────────────
+            async function loadStories(category, append = false) {
+                if (!append) {
+                    $storyList.innerHTML = '';
+                    displayedStoryIds = [];
+                    $loadMoreContainer.style.display = 'none';
+                }
+                $loadingSpinner.style.display = 'flex';
+                isLoadingMore = true;
+
+                try {
+                    if (!append || allStoryIds.length === 0) {
+                        allStoryIds = await fetchStoryIds(category);
+                    }
+
+                    const startIndex = append ? displayedStoryIds.length : 0;
+                    const endIndex = Math.min(startIndex + STORIES_PER_PAGE, allStoryIds.length);
+                    const batchIds = allStoryIds.slice(startIndex, endIndex);
+
+                    if (batchIds.length === 0) {
+                        $loadingSpinner.style.display = 'none';
+                        $loadMoreContainer.style.display = 'none';
+                        if (!append) {
+                            $storyList.innerHTML =
+                                '<div class="empty-state"><span class="icon">📭</span>No stories found.</div>';
+                        }
+                        isLoadingMore = false;
+                        return;
+                    }
+
+                    const stories = await fetchItems(batchIds);
+                    displayedStoryIds = [...displayedStoryIds, ...stories.map(s => s.id)];
+
+                    if (append) {
+                        stories.forEach(story => {
+                            $storyList.appendChild(renderStoryCard(story));
+                        });
+                        refreshStoryListVisibility();
+                    } else {
+                        renderStoryList(stories);
+                    }
+
+                    // Show load more if there are more stories
+                    if (endIndex < allStoryIds.length) {
+                        $loadMoreContainer.style.display = 'block';
+                    } else {
+                        $loadMoreContainer.style.display = 'none';
+                    }
+
+                } catch (err) {
+                    if (!append) {
+                        $storyList.innerHTML =
+                            `<div class="empty-state"><span class="icon">😕</span>Failed to load stories.<br><small>${escapeHtml(err.message)}</small></div>`;
+                    }
+                    console.error('Failed to load stories:', err);
+                } finally {
+                    $loadingSpinner.style.display = 'none';
+                    isLoadingMore = false;
+                }
+            }
+
+            async function loadMore() {
+                if (isLoadingMore) return;
+                await loadStories(currentCategory, true);
+            }
+
+            function switchCategory(category) {
+                if (currentCategory === category && displayedStoryIds.length > 0) return;
+                currentCategory = category;
+                allStoryIds = [];
+                displayedStoryIds = [];
+                // Update active tab
+                $navTabs.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.classList.toggle('active', tab.dataset.cat === category);
+                });
+                // Close panels
+                if (detailPanelOpen) closeDetailPanel();
+                if (followedPanelOpen) closeFollowedPanel();
+                // Load
+                loadStories(category);
+            }
+
+            function goHome() {
+                switchCategory('top');
+                if (detailPanelOpen) closeDetailPanel();
+                if (followedPanelOpen) closeFollowedPanel();
+                $storyList.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            // ──────────────────────────────────────
+            // INITIALIZATION
+            // ──────────────────────────────────────
+            function init() {
+                loadFromStorage();
+                applyTheme();
+                updateHideVisitedButton();
+                updateFollowedCount();
+                updateFollowedDots();
+
+                // Nav tab clicks
+                $navTabs.addEventListener('click', (e) => {
+                    const tab = e.target.closest('.nav-tab');
+                    if (!tab) return;
+                    const category = tab.dataset.cat;
+                    if (category) switchCategory(category);
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        if (followedPanelOpen) closeFollowedPanel();
+                        else if (detailPanelOpen) closeDetailPanel();
+                    }
+                    if (e.ctrlKey && e.key === 'h') {
+                        e.preventDefault();
+                        toggleHideVisited();
+                    }
+                });
+
+                // Initial load
+                loadStories(currentCategory);
+            }
+
+            // ──────────────────────────────────────
+            // EXPOSE GLOBALS
+            // ──────────────────────────────────────
+            window.openStoryDetail = openStoryDetail;
+            window.closeDetailPanel = closeDetailPanel;
+            window.toggleFollowedPanel = toggleFollowedPanel;
+            window.closeFollowedPanel = closeFollowedPanel;
+            window.toggleHideVisited = toggleHideVisited;
+            window.toggleTheme = toggleTheme;
+            window.unfollowComment = unfollowComment;
+            window.goHome = goHome;
+            window.loadMore = loadMore;
+
+            // Start the app
+            init();
+        })();
+    </script>
+</body>
+</html>
