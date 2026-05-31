@@ -980,8 +980,7 @@
                 const results = await Promise.allSettled(ids.map(id => fetchItem(id)));
                 return results
                     .filter(r => r.status === 'fulfilled' && r.value)
-                    .map(r => r.value)
-                    .filter(item => item.type === 'story' || item.type === 'job');
+                    .map(r => r.value);
             }
 
             // ──────────────────────────────────────
