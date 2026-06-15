@@ -1,0 +1,7 @@
+# Stow 2026 Benchmark — Model Lineup
+# One model per line. Format: provider/model-id
+# Examples:
+#   anthropic/claude-sonnet-4
+#   openai/gpt-5
+#   poe-responses/Claude-Opus-4.7
+
