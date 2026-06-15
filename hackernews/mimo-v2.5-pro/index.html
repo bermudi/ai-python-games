@@ -282,7 +282,7 @@ const API='https://hacker-news.firebaseio.com/v0';
 // STATE
 // ============================================================
 const S={
-  cat:'top',ids:[],stories:[],page:0,loading:false,query:'',
+  cat:'',ids:[],stories:[],page:0,loading:false,query:'',
   hideVisited:false,fi:-1,panelStory:null,panelOpen:false,
   folOpen:false
 };
@@ -645,8 +645,8 @@ function closeFol(){
   document.getElementById('folDrop').classList.remove('on');
 }
 
-async function switchCat(cat){
-  if(S.cat===cat&&!S.loading)return;
+async function switchCat(cat,force=false){
+  if(S.cat===cat&&!S.loading&&!force)return;
   S.cat=cat;S.page=0;S.stories=[];S.ids=[];S.fi=-1;S.query='';
   document.getElementById('searchInput').value='';
   renderNav();
@@ -732,7 +732,7 @@ function handleKey(e){
     case'h':
       e.preventDefault();toggleHideVisited();break;
     case'r':
-      if(!S.panelOpen){e.preventDefault();switchCat(S.cat)}
+      if(!S.panelOpen){e.preventDefault();switchCat(S.cat,true)}
       break;
     case's':
       e.preventDefault();document.getElementById('searchInput').focus();break;
@@ -767,7 +767,7 @@ async function init(){
   document.getElementById('btnHide').onclick=toggleHideVisited;
   document.getElementById('btnFollow').onclick=toggleFolDrop;
   document.getElementById('btnRefresh').innerHTML=I.refresh;
-  document.getElementById('btnRefresh').onclick=()=>switchCat(S.cat);
+  document.getElementById('btnRefresh').onclick=()=>switchCat(S.cat,true);
   document.getElementById('overlay').onclick=closePanel;
   document.getElementById('loadMore').onclick=loadMore;
 
